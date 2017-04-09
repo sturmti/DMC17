@@ -10,6 +10,7 @@ getFilePath <- function(file.name){
   paste0(path, file.name)
 }
 
+
 ###### MAIN FUNCTIONS #####
 #' Get item.csv data
 #' @description Imports the item.csv data, factors certain columns and returns a corresponding data.table.
@@ -50,4 +51,11 @@ getClassData <- function(){
   data.class$pid <- factor(data.class$pid)
   data.class$availability <- ordered(data.class$availability, levels = c(1, 2, 3, 4))
   data.class
+}
+
+#' Loads and initializes the Data
+#' @description Imports all three files (item.csv, train.csv, class.csv), factorizes if needed and returns a vector containing corresponding data.tables. 
+#' @return A vector containing the data of item.csv, train.csv, class.csv
+initializeData <- function(){
+  list(itemData = getItemData(), trainData = getTrainData(), classData = getClassData())
 }
