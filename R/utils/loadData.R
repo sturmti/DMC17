@@ -9,9 +9,15 @@ data.items <- data.table(read.csv(file = "/Users/TimoSturm/Documents/Masterstudi
 data.class <- data.table(read.csv(file = "/Users/TimoSturm/Documents/Masterstudium/2. Semester/Data Mining II/Data Mining Cup 2017/DMC_2017_task/class.csv", header = T, sep = "|"))
 
 ### factorize the polynominal columns
-##    - data.items: all columns
-##    - data.train:
-##    - data.class:
-
-data.items <- factor(data.items)
-
+##    - data.items: factored: all columns
+##    - data.train: factored: lineID, pid
+##                  ordered: availability
+##    - data.class: factored: lineID, pid
+##                  ordered: availability
+data.items <- data.items[, lapply(.SD, factor)]
+data.train$lineID <- factor(data.train$lineID)
+data.train$pid <- factor(data.train$pid)
+data.train$availability <- ordered(data.train$availability, levels = c(1, 2, 3, 4))
+data.class$lineID <- factor(data.class$lineID)
+data.class$pid <- factor(data.class$pid)
+data.class$availability <- ordered(data.class$availability, levels = c(1, 2, 3, 4))
