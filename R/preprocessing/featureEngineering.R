@@ -25,6 +25,10 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
     factorizedRelationPriceCustomerPrice = ifelse(data.train$price > data.train$competitorPrice, "higher", ifelse(data.train$price < data.train$competitorPrice, "lower", "equal"))
   })
   data.train$factorizedRelationPriceCustomerPrice = ordered(data.train$factorizedRelationPriceCustomerPrice, c("lower", "equal", "higher"))
+  # indicator if line has revenue (= order)
+  data.train <- within(data.train, {
+    hasRevenue = ifelse(data.train$order == 1, 1, 0)
+  })
   
   data.train
 }
