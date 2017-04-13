@@ -12,8 +12,9 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="read_csv" compatibility="7.4.000" expanded="true" height="68" name="Read CSV" width="90" x="313" y="34">
-        <parameter key="column_separators" value=";"/>
+      <operator activated="true" class="read_csv" compatibility="7.4.000" expanded="true" height="68" name="Read train" width="90" x="112" y="34">
+        <parameter key="csv_file" value="C:\Users\alexb\Documents\Uni_Mannheim\01_Vorlesungen\02_FSS_2017\01_Data_Mining2\Project\DMC_2017_task\train.csv"/>
+        <parameter key="column_separators" value="|"/>
         <parameter key="trim_lines" value="false"/>
         <parameter key="use_quotes" value="true"/>
         <parameter key="quotes_character" value="&quot;"/>
@@ -25,20 +26,152 @@
         <parameter key="grouped_digits" value="false"/>
         <parameter key="grouping_character" value=","/>
         <parameter key="date_format" value=""/>
-        <parameter key="first_row_as_names" value="true"/>
-        <list key="annotations"/>
+        <parameter key="first_row_as_names" value="false"/>
+        <list key="annotations">
+          <parameter key="0" value="Name"/>
+        </list>
         <parameter key="time_zone" value="SYSTEM"/>
         <parameter key="locale" value="English (United States)"/>
-        <parameter key="encoding" value="SYSTEM"/>
-        <list key="data_set_meta_data_information"/>
+        <parameter key="encoding" value="windows-1252"/>
+        <list key="data_set_meta_data_information">
+          <parameter key="0" value="lineID.true.integer.id"/>
+          <parameter key="1" value="day.true.integer.attribute"/>
+          <parameter key="2" value="pid.true.integer.attribute"/>
+          <parameter key="3" value="adFlag.true.binominal.attribute"/>
+          <parameter key="4" value="availability.true.integer.attribute"/>
+          <parameter key="5" value="competitorPrice.true.real.attribute"/>
+          <parameter key="6" value="click.true.binominal.attribute"/>
+          <parameter key="7" value="basket.true.binominal.attribute"/>
+          <parameter key="8" value="order.true.binominal.attribute"/>
+          <parameter key="9" value="price.true.real.attribute"/>
+          <parameter key="10" value="revenue.true.real.label"/>
+        </list>
         <parameter key="read_not_matching_values_as_missings" value="true"/>
         <parameter key="datamanagement" value="double_array"/>
         <parameter key="data_management" value="auto"/>
       </operator>
-      <connect from_op="Read CSV" from_port="output" to_port="result 1"/>
+      <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store" width="90" x="246" y="34">
+        <parameter key="repository_entry" value="//DMC/Data/train_original"/>
+      </operator>
+      <operator activated="true" class="read_csv" compatibility="7.4.000" expanded="true" height="68" name="Read class" width="90" x="112" y="136">
+        <parameter key="csv_file" value="C:\Users\alexb\Documents\Uni_Mannheim\01_Vorlesungen\02_FSS_2017\01_Data_Mining2\Project\DMC_2017_task\class.csv"/>
+        <parameter key="column_separators" value="|"/>
+        <parameter key="trim_lines" value="false"/>
+        <parameter key="use_quotes" value="true"/>
+        <parameter key="quotes_character" value="&quot;"/>
+        <parameter key="escape_character" value="\"/>
+        <parameter key="skip_comments" value="false"/>
+        <parameter key="comment_characters" value="#"/>
+        <parameter key="parse_numbers" value="true"/>
+        <parameter key="decimal_character" value="."/>
+        <parameter key="grouped_digits" value="false"/>
+        <parameter key="grouping_character" value=","/>
+        <parameter key="date_format" value=""/>
+        <parameter key="first_row_as_names" value="false"/>
+        <list key="annotations">
+          <parameter key="0" value="Name"/>
+        </list>
+        <parameter key="time_zone" value="SYSTEM"/>
+        <parameter key="locale" value="English (United States)"/>
+        <parameter key="encoding" value="windows-1252"/>
+        <list key="data_set_meta_data_information">
+          <parameter key="0" value="lineID.true.integer.id"/>
+          <parameter key="1" value="day.true.integer.attribute"/>
+          <parameter key="2" value="pid.true.integer.attribute"/>
+          <parameter key="3" value="adFlag.true.binominal.attribute"/>
+          <parameter key="4" value="availability.true.integer.attribute"/>
+          <parameter key="5" value="competitorPrice.true.real.attribute"/>
+          <parameter key="6" value="price.true.real.attribute"/>
+        </list>
+        <parameter key="read_not_matching_values_as_missings" value="true"/>
+        <parameter key="datamanagement" value="double_array"/>
+        <parameter key="data_management" value="auto"/>
+      </operator>
+      <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store (2)" width="90" x="246" y="136">
+        <parameter key="repository_entry" value="//DMC/Data/class_original"/>
+      </operator>
+      <operator activated="true" class="read_csv" compatibility="7.4.000" expanded="true" height="68" name="Read items" width="90" x="112" y="238">
+        <parameter key="csv_file" value="C:\Users\alexb\Documents\Uni_Mannheim\01_Vorlesungen\02_FSS_2017\01_Data_Mining2\Project\DMC_2017_task\items.csv"/>
+        <parameter key="column_separators" value="|"/>
+        <parameter key="trim_lines" value="false"/>
+        <parameter key="use_quotes" value="true"/>
+        <parameter key="quotes_character" value="&quot;"/>
+        <parameter key="escape_character" value="\"/>
+        <parameter key="skip_comments" value="false"/>
+        <parameter key="comment_characters" value="#"/>
+        <parameter key="parse_numbers" value="true"/>
+        <parameter key="decimal_character" value="."/>
+        <parameter key="grouped_digits" value="false"/>
+        <parameter key="grouping_character" value=","/>
+        <parameter key="date_format" value=""/>
+        <parameter key="first_row_as_names" value="false"/>
+        <list key="annotations">
+          <parameter key="0" value="Name"/>
+        </list>
+        <parameter key="time_zone" value="SYSTEM"/>
+        <parameter key="locale" value="English (United States)"/>
+        <parameter key="encoding" value="windows-1252"/>
+        <list key="data_set_meta_data_information">
+          <parameter key="0" value="pid.true.integer.id"/>
+          <parameter key="1" value="manufacturer.true.integer.attribute"/>
+          <parameter key="2" value="group.true.polynominal.attribute"/>
+          <parameter key="3" value="content.true.polynominal.attribute"/>
+          <parameter key="4" value="unit.true.polynominal.attribute"/>
+          <parameter key="5" value="pharmForm.true.polynominal.attribute"/>
+          <parameter key="6" value="genericProduct.true.integer.attribute"/>
+          <parameter key="7" value="salesIndex.true.integer.attribute"/>
+          <parameter key="8" value="category.true.integer.attribute"/>
+          <parameter key="9" value="campaignIndex.true.polynominal.attribute"/>
+          <parameter key="10" value="rrp.true.real.attribute"/>
+        </list>
+        <parameter key="read_not_matching_values_as_missings" value="true"/>
+        <parameter key="datamanagement" value="double_array"/>
+        <parameter key="data_management" value="auto"/>
+      </operator>
+      <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store (3)" width="90" x="246" y="238">
+        <parameter key="repository_entry" value="//DMC/Data/items_original"/>
+      </operator>
+      <operator activated="true" class="multiply" compatibility="7.4.000" expanded="true" height="103" name="Multiply" width="90" x="380" y="238"/>
+      <operator activated="true" class="join" compatibility="7.4.000" expanded="true" height="82" name="Join (2)" width="90" x="581" y="187">
+        <parameter key="remove_double_attributes" value="true"/>
+        <parameter key="join_type" value="inner"/>
+        <parameter key="use_id_attribute_as_key" value="false"/>
+        <list key="key_attributes">
+          <parameter key="pid" value="pid"/>
+        </list>
+        <parameter key="keep_both_join_attributes" value="false"/>
+      </operator>
+      <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store (5)" width="90" x="715" y="187">
+        <parameter key="repository_entry" value="../Data/class"/>
+      </operator>
+      <operator activated="true" class="join" compatibility="7.4.000" expanded="true" height="82" name="Join" width="90" x="581" y="34">
+        <parameter key="remove_double_attributes" value="true"/>
+        <parameter key="join_type" value="inner"/>
+        <parameter key="use_id_attribute_as_key" value="false"/>
+        <list key="key_attributes">
+          <parameter key="pid" value="pid"/>
+        </list>
+        <parameter key="keep_both_join_attributes" value="false"/>
+      </operator>
+      <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store (4)" width="90" x="715" y="34">
+        <parameter key="repository_entry" value="//DMC/Data/train"/>
+      </operator>
+      <connect from_op="Read train" from_port="output" to_op="Store" to_port="input"/>
+      <connect from_op="Store" from_port="through" to_op="Join" to_port="left"/>
+      <connect from_op="Read class" from_port="output" to_op="Store (2)" to_port="input"/>
+      <connect from_op="Store (2)" from_port="through" to_op="Join (2)" to_port="left"/>
+      <connect from_op="Read items" from_port="output" to_op="Store (3)" to_port="input"/>
+      <connect from_op="Store (3)" from_port="through" to_op="Multiply" to_port="input"/>
+      <connect from_op="Multiply" from_port="output 1" to_op="Join" to_port="right"/>
+      <connect from_op="Multiply" from_port="output 2" to_op="Join (2)" to_port="right"/>
+      <connect from_op="Join (2)" from_port="join" to_op="Store (5)" to_port="input"/>
+      <connect from_op="Store (5)" from_port="through" to_port="result 2"/>
+      <connect from_op="Join" from_port="join" to_op="Store (4)" to_port="input"/>
+      <connect from_op="Store (4)" from_port="through" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
     </process>
   </operator>
 </process>
