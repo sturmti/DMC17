@@ -8,7 +8,7 @@ Contains the official DMC 2017 task pdfs.
   
   
 ## RapidMiner
-Contains RapidMiner processes  
+Contains RapidMiner processes.  
 
 
 ## R
