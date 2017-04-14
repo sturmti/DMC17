@@ -9,3 +9,32 @@ initializeDataTrain <- function(){
   data.train <- createEngineeredFeaturesForDataTrain(data.train)
   data.train
 }
+
+#' Initializes and samples the train data
+#' @description Initializes the train data and samples it according to the given fraction.
+#' @return A fraction based sample of the train data.
+getInitializedSampleTrainData <- function(size = 0.2){
+  sample <- initializeDataTrain()
+  sample <- sample_frac(tbl = sample, size = size)
+  sample
+}
+
+#' Creates a sample of the given data
+#' @description Samples the given data according to the given fraction.
+#' @return A fraction based sample of the train data.
+sampleData <- function(data, size = 0.2){
+  sample <- sample_frac(tbl = data, size = size)
+  sample
+}
+
+#' Join two given data sets
+#' @description Makes a left join between data1 and data2 based on the "pid" feature.
+#' @param data1 data.table containing data for the left side of the join.
+#' @param data2 data.table containing data for the right side of the join.
+#' @return A data table containing the joined data.
+joinData <- function(data1, data2){
+  data.train <- initializeDataTrain
+  data.items <- getItemData() 
+  data.all <- left_join(x = data1, y = data2, by = c("pid" = "pid"))
+  data.all
+}
