@@ -1,8 +1,9 @@
 # DMC17
 ## CSV Files
-Please upload each new created CSV file that you want to share into this Google Drive directory (please use a correct versioning):  
-https://drive.google.com/drive/folders/0BzZHsv2pm984V25FM1g1UVdQbmM?usp=sharing
-
+Please upload each new created CSV file that you want to share into this Google Drive directory (please use a correct name versioning):  
+https://drive.google.com/drive/folders/0BzZHsv2pm984V25FM1g1UVdQbmM?usp=sharing  
+  
+  
 ## RapidMiner
 Contains RapidMiner processes 
 
