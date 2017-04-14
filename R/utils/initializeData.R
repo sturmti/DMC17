@@ -35,6 +35,6 @@ sampleData <- function(data, size = 0.2){
 joinData <- function(data1, data2){
   data.train <- initializeDataTrain
   data.items <- getItemData() 
-  data.all <- left_join(x = data1, y = data2, by = c("pid" = "pid"))
+  data.all <- data.table(left_join(x = data1, y = data2, by = c("pid" = "pid")))
   data.all
 }
