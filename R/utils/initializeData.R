@@ -10,6 +10,25 @@ initializeDataTrain <- function(){
   data.train
 }
 
+#' Initialize data.items
+#' @description Initializes data.items by importing the data and adding the engineered features.
+#' @return A data.table containing the items.csv data with the additional engineered features.
+initializeDataItems <- function(){
+  data.items <- getItemData()
+  data.items <- createEngineeredFeaturesForDataItems(data.items)
+  data.items
+}
+
+#' Initialize data.all
+#' @description Initializes data.items by importing the data and adding the engineered features.
+#' @return A data.table containing the items.csv data with the additional engineered features.
+initializeJoinedData <- function(){
+  data.train <- initializeDataTrain()
+  data.items <- initializeDataItems()
+  data.all <- joinData(data.train, data.items)
+  data.all
+}
+
 #' Initializes and samples the train data
 #' @description Initializes the train data and samples it according to the given fraction.
 #' @return A fraction based sample of the train data.
@@ -33,8 +52,6 @@ sampleData <- function(data, size = 0.2){
 #' @param data2 data.table containing data for the right side of the join.
 #' @return A data table containing the joined data.
 joinData <- function(data1, data2){
-  data.train <- initializeDataTrain
-  data.items <- getItemData() 
   data.all <- data.table(left_join(x = data1, y = data2, by = c("pid" = "pid")))
   data.all
 }

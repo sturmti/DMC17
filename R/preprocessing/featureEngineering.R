@@ -32,3 +32,21 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   
   data.train
 }
+
+#' Create additional engineered features for the items.csv
+#' @description Computes and adds the engineered features to the data.items data set.
+#' @return A data.table containing the enhanced data.items data set.
+createEngineeredFeaturesForDataItems <- function(data.items){
+  ## based on unit
+  # binning of unit values: "ST" and "notST"
+  data.items <- within(data.items, {
+    unit_is_ST = ifelse(data.items$unit == "ST", 1, 0)
+  })
+  # binning of unit values: "ST", "ML" and "OTHER"
+  data.items <- within(data.items, {
+    unit_ST_ML_OTHER = ifelse(data.items$unit == "ST", "ST", ifelse(data.items$unit == "ML", "ML", "OTHER"))
+  })
+  
+  data.items
+}
+
