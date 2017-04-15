@@ -46,7 +46,25 @@ createEngineeredFeaturesForDataItems <- function(data.items){
   data.items <- within(data.items, {
     unit_ST_ML_OTHER = ifelse(data.items$unit == "ST", "ST", ifelse(data.items$unit == "ML", "ML", "OTHER"))
   })
+  ## based on content
+  # number of packages of each product according to content
+  data.items$numberOfPackages <- lapply(data.items$content, function(data){
+    numberVector <- strsplit(as.character(data), "X")[[1]]
+    if(length(numberVector) > 1)
+      result = numberVector[1]
+    else 
+      result = 1
+    result
+  })
+  # quantity in each package
+  data.items$quantityByPackage <- lapply(data.items$content, function(data){
+    numberVector <- strsplit(as.character(data), "X")[[1]]
+    if(length(numberVector) > 1)
+      result = numberVector[2]
+    else
+      result = numberVector[1]
+    result  
+  })
   
   data.items
 }
-

@@ -1,5 +1,6 @@
 source("utils/loadData.R")
 source("preprocessing/featureEngineering.R")
+library(dplyr)
 
 #' Initialize data.train
 #' @description Initializes data.train by importing the data and adding the engineered features.
