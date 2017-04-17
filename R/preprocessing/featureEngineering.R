@@ -29,6 +29,9 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   data.train <- within(data.train, {
     hasRevenue = ifelse(data.train$order == 1, 1, 0)
   })
+  # mean price per product
+  meanPricePerProduct <- setNames(aggregate(x = data.train$price, by = list(pid = data.train$pid), FUN = mean), c("pid", "meanPricePerProduct"))
+  data.train <- data.table(left_join(data.train, data.table(meanPricePerProduct), by=c("pid" = "pid")))
   
   data.train
 }
@@ -51,11 +54,13 @@ createEngineeredFeaturesForDataItems <- function(data.items){
   data.items$numberOfPackages <- lapply(data.items$content, function(data){
     numberVector <- strsplit(as.character(data), "X")[[1]]
     if(length(numberVector) > 1)
-      result = numberVector[1]
+      result = numberVector[[1]]
     else 
-      result = 1
+      result = "1"
     result
   })
+  data.items$numberOfPackages <- as.character(data.items$numberOfPackages)  # without this transformation each value will be saved as list
+  
   # quantity in each package
   data.items$quantityByPackage <- lapply(data.items$content, function(data){
     numberVector <- strsplit(as.character(data), "X")[[1]]
@@ -63,8 +68,9 @@ createEngineeredFeaturesForDataItems <- function(data.items){
       result = numberVector[2]
     else
       result = numberVector[1]
-    result  
+    result
   })
+  data.items$quantityByPackage <- as.character(data.items$quantityByPackage)  # without this transformation each value will be saved as list
   
   data.items
 }
