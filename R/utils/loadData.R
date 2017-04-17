@@ -17,10 +17,12 @@ getFilePath <- function(file.name){
 #' @return A data.table containing the item.csv data.
 getItemData <- function(){
   # Import Data
-  data.items <- data.table(read.csv(file = getFilePath("items.csv"), header = T, sep = "|"))
+  data.items.unfactored <- data.table(read.csv(file = getFilePath("items.csv"), header = T, sep = "|"))
   # factorize the polynominal columns:
-  #   - factored: all columns
-  data.items <- data.items[, lapply(.SD, factor)]
+  #   - factored: all columns, except: rrp (= 11th column)
+  data.items <- data.items.unfactored[, lapply(.SD[, -11], factor)]
+  data.items$rrp <- data.items.unfactored$rrp
+  data.items
 } 
 
 #' Get the train.csv data

@@ -27,6 +27,7 @@ initializeJoinedData <- function(){
   data.train <- initializeDataTrain()
   data.items <- initializeDataItems()
   data.all <- joinData(data.train, data.items)
+  data.all <- createEngineeredFeaturesForDataTrainItems(data.all)
   data.all
 }
 

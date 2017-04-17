@@ -14,7 +14,7 @@ data.items <- initializeDataItems()
 data.all <- initializeJoinedData()
 
 ####### CSV File Creation ####### 
-storeData(data = data.all, file.name = "trainItems_v1.2.csv")
+storeData(data = data.train, file.name = "train_v1.2.csv")
 
 #3480: record with content == "40X0.5"
 data.items[content == "40X0.5"]
@@ -38,11 +38,11 @@ dailyPriceDifference
 
 
 
-setNames(aggregate(x = data.train$price, by = list(pid = data.train$pid), FUN = mean), c("pid", "meanPricePerProduct"))
-sum(data.train[pid==273]$price)/nrow(data.train[pid==273])
 
-data.train[pid==273]$meanPricePerProduct
-class(data.train)
 
-data.items$quantityByPackage <- as.character(data.items$quantityByPackage)
+min(data.all$rrp - data.all$price)
+min(data.all$Diff_RrpPrice)
+
+class(data.all$rrp)
+
 

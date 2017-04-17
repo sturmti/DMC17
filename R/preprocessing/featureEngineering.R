@@ -40,6 +40,9 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
 #' @description Computes and adds the engineered features to the data.items data set.
 #' @return A data.table containing the enhanced data.items data set.
 createEngineeredFeaturesForDataItems <- function(data.items){
+  ## based on rrp
+  # normalized rrp
+  data.items$rrpNorm <- data.items$rrp/max(data.items$rrp)
   ## based on unit
   # binning of unit values: "ST" and "notST"
   data.items <- within(data.items, {
@@ -73,4 +76,17 @@ createEngineeredFeaturesForDataItems <- function(data.items){
   data.items$quantityByPackage <- as.character(data.items$quantityByPackage)  # without this transformation each value will be saved as list
   
   data.items
+}
+
+#' Create additional engineered features for the trainItems.csv
+#' @description Computes and adds the engineered features to the data.train.items data set.
+#' @return A data.table containing the enhanced data.train.items data set.
+createEngineeredFeaturesForDataTrainItems <- function(data.train.items){
+  ## based on rrp, price, competitorPrice
+  # absolute difference between rrp and price (= rrp - price)
+  data.train.items$diff_rrp_price <- data.train.items$rrp - data.train.items$price
+  # absolute difference between rrp and competitorPrice (= rrp - competitorPrice)
+  data.train.items$diff_rrp_competitorPrice <- data.train.items$rrp - data.train.items$competitorPrice
+  
+  data.train.items
 }
