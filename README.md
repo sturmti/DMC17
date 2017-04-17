@@ -1,6 +1,6 @@
 # DMC17
 ## CSV Files
-Please upload each new created CSV file that you want to share into this Google Drive directory (please use a correct name versioning):  
+Please upload each new created CSV file that you want to share into this Google Drive directory (please use a correct name versioning as file name):  
 https://drive.google.com/drive/folders/0BzZHsv2pm984V25FM1g1UVdQbmM?usp=sharing  
 
 ## Task
