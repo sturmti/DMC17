@@ -2,6 +2,18 @@
 #' @description Computes and adds the engineered features to the data.train data set.
 #' @return A data.table containing the enhanced data.train data set.
 createEngineeredFeaturesForDataTrain <- function(data.train){
+  ## based on day
+  # indicator for weekday
+  data.train$weekday <- lapply(data.train$day, function(day){
+    modRes <- (day %% 7)
+    ifelse(modRes == 0, 7, modRes)
+  })
+  data.train$weekday <- as.numeric(data.train$weekday)  # without this transformation the values will be saved as lists 
+  
+  #data.train <- within(data.train, {
+  #  weekday = ifelse(data.train$day %% 7 == 0, 7, data.train$day %% 7)
+  #})
+  
   ## based on click, basket, order
   # aggregates the features click, baset, order into one single feature
   data.train <- within(data.train, {
@@ -20,11 +32,11 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   # normalization of price, competitorPrice
   data.train$priceNorm <- data.train$price/max(data.train$price)
   data.train$competitorPriceNorm <- data.train$competitorPrice/max(data.train$competitorPrice, na.rm = TRUE)
-  # ordered factorized relation between price, customerPrice ("lower", "equal", "higher")
+  # ordered factorized relation between price, competitorPrice ("lower", "equal", "higher")
   data.train <- within(data.train, {
-    factorizedRelationPriceCustomerPrice = ifelse(data.train$price > data.train$competitorPrice, "higher", ifelse(data.train$price < data.train$competitorPrice, "lower", "equal"))
+    factorizedRelationPriceCompetitorPrice = ifelse(data.train$price > data.train$competitorPrice, "higher", ifelse(data.train$price < data.train$competitorPrice, "lower", ifelse(data.train$price == data.train$competitorPrice, "equal", NA)))
   })
-  data.train$factorizedRelationPriceCustomerPrice = ordered(data.train$factorizedRelationPriceCustomerPrice, c("lower", "equal", "higher"))
+  data.train$factorizedRelationPriceCompetitorPrice = ordered(data.train$factorizedRelationPriceCompetitorPrice, c("lower", "equal", "higher"))
   # indicator if line has revenue (= order)
   data.train <- within(data.train, {
     hasRevenue = ifelse(data.train$order == 1, 1, 0)
