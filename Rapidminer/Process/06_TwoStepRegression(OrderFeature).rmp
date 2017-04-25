@@ -13,7 +13,7 @@
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
       <operator activated="true" class="retrieve" compatibility="7.4.000" expanded="true" height="68" name="Retrieve trainItems_v1.2_1%_RandomSubsample" width="90" x="45" y="34">
-        <parameter key="repository_entry" value="//DMC/Data/trainItems_v1.2_1%_RandomSubsample"/>
+        <parameter key="repository_entry" value="../Data/trainItems_v1.2_1%_RandomSubsample"/>
       </operator>
       <operator activated="true" class="multiply" compatibility="7.4.000" expanded="true" height="103" name="Multiply" width="90" x="179" y="34"/>
       <operator activated="true" class="select_attributes" compatibility="7.4.000" expanded="true" height="82" name="Select Attributes (3)" width="90" x="447" y="289">
