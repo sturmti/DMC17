@@ -144,7 +144,7 @@
       <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store (5)" width="90" x="715" y="187">
         <parameter key="repository_entry" value="../Data/class"/>
       </operator>
-      <operator activated="true" class="join" compatibility="7.4.000" expanded="true" height="82" name="Join" width="90" x="581" y="34">
+      <operator activated="true" class="join" compatibility="7.4.000" expanded="true" height="82" name="Join" width="90" x="514" y="34">
         <parameter key="remove_double_attributes" value="true"/>
         <parameter key="join_type" value="inner"/>
         <parameter key="use_id_attribute_as_key" value="false"/>
@@ -153,8 +153,21 @@
         </list>
         <parameter key="keep_both_join_attributes" value="false"/>
       </operator>
-      <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store (4)" width="90" x="715" y="34">
+      <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store (4)" width="90" x="648" y="34">
         <parameter key="repository_entry" value="//DMC/Data/train"/>
+      </operator>
+      <operator activated="true" class="filter_examples" compatibility="7.4.000" expanded="true" height="103" name="Filter Examples" width="90" x="782" y="34">
+        <parameter key="parameter_expression" value=""/>
+        <parameter key="condition_class" value="custom_filters"/>
+        <parameter key="invert_filter" value="false"/>
+        <list key="filters_list">
+          <parameter key="filters_entry_key" value="day.ge.19"/>
+        </list>
+        <parameter key="filters_logic_and" value="true"/>
+        <parameter key="filters_check_metadata" value="true"/>
+      </operator>
+      <operator activated="true" class="store" compatibility="7.4.000" expanded="true" height="68" name="Store (6)" width="90" x="916" y="34">
+        <parameter key="repository_entry" value="//DMC/Data/train_cut"/>
       </operator>
       <connect from_op="Read train" from_port="output" to_op="Store" to_port="input"/>
       <connect from_op="Store" from_port="through" to_op="Join" to_port="left"/>
@@ -167,7 +180,9 @@
       <connect from_op="Join (2)" from_port="join" to_op="Store (5)" to_port="input"/>
       <connect from_op="Store (5)" from_port="through" to_port="result 2"/>
       <connect from_op="Join" from_port="join" to_op="Store (4)" to_port="input"/>
-      <connect from_op="Store (4)" from_port="through" to_port="result 1"/>
+      <connect from_op="Store (4)" from_port="through" to_op="Filter Examples" to_port="example set input"/>
+      <connect from_op="Filter Examples" from_port="example set output" to_op="Store (6)" to_port="input"/>
+      <connect from_op="Store (6)" from_port="through" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
