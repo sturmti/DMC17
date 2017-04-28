@@ -3,16 +3,26 @@
 #' @return A data.table containing the enhanced data.train data set.
 createEngineeredFeaturesForDataTrain <- function(data.train){
   ## based on day
+  # timestamp (format: mm/dd/YYYY) starts on 01.10.2016
+  data.train$date <- as.Date("2016-10-01") + data.train$day - 1
   # indicator for weekday
-  data.train$weekday <- lapply(data.train$day, function(day){
+  data.train$weekday_number <- lapply(data.train$day, function(day){
     modRes <- (day %% 7)
     ifelse(modRes == 0, 7, modRes)
   })
-  data.train$weekday <- as.numeric(data.train$weekday)  # without this transformation the values will be saved as lists 
+  data.train$weekday_number <- as.numeric(data.train$weekday_number)  # without this transformation the values will be saved as lists
+  # indicator for weekday name
+  data.train$weekday_name <- weekdays(data.train$date)
+  # indicator for week
+  #data.train$week <- as.numeric( format(data.train$date-2, "%W"))  # "-2" because it starts at the first sunday
+  #data.train$week <- round(ifelse(data.train$day/7 < 0.5, data.train$day/7, data.train$day/7-0.5)) + 1
+  #indicator for month half
+  data.train$monthHalf <- ifelse(as.numeric(format(data.train$date, "%d")) > 15, 2, 1)
+  #data.train$monthHalf <- ifelse(data.train$day < 15, 1, ifelse(data.train$day < 32, 2, ifelse(data.train$day < 47)) )
+  # indicator for month
+  data.train$month <- as.numeric(format(data.train$date, "%m")) - 9 # the "-9" is necessary because we want 1,2,3 and not 10,11,12 
+  #data.train$month <- round(ifelse(data.train$day < 32, 1, ifelse(data.train$day < 62, 2, 3)))
   
-  #data.train <- within(data.train, {
-  #  weekday = ifelse(data.train$day %% 7 == 0, 7, data.train$day %% 7)
-  #})
   
   ## based on click, basket, order
   # aggregates the features click, baset, order into one single feature
@@ -37,10 +47,6 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
     factorizedRelationPriceCompetitorPrice = ifelse(data.train$price > data.train$competitorPrice, "higher", ifelse(data.train$price < data.train$competitorPrice, "lower", ifelse(data.train$price == data.train$competitorPrice, "equal", NA)))
   })
   data.train$factorizedRelationPriceCompetitorPrice = ordered(data.train$factorizedRelationPriceCompetitorPrice, c("lower", "equal", "higher"))
-  # indicator if line has revenue (= order)
-  data.train <- within(data.train, {
-    hasRevenue = ifelse(data.train$order == 1, 1, 0)
-  })
   # mean price per product
   meanPricePerProduct <- setNames(aggregate(x = data.train$price, by = list(pid = data.train$pid), FUN = mean), c("pid", "meanPricePerProduct"))
   data.train <- data.table(left_join(data.train, data.table(meanPricePerProduct), by=c("pid" = "pid")))
