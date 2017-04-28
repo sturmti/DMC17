@@ -68,24 +68,36 @@ createEngineeredFeaturesForDataItems <- function(data.items){
   # number of packages of each product according to content
   data.items$numberOfPackages <- lapply(data.items$content, function(data){
     numberVector <- strsplit(as.character(data), "X")[[1]]
-    if(length(numberVector) > 1)
-      result = numberVector[[1]]
-    else 
-      result = "1"
+    if(length(numberVector) == 3){
+      result = as.character(as.numeric(numberVector[1]) * as.numeric(numberVector[2]))
+    }
+    else{
+      if(data == "PAK" || data == "L   125")
+        result = NA
+      else if(length(numberVector) > 1)
+        result = numberVector[[1]]
+      else 
+        result = "1"
+    }
     result
   })
-  data.items$numberOfPackages <- as.character(data.items$numberOfPackages)  # without this transformation each value will be saved as list
+  data.items$numberOfPackages <- as.numeric(data.items$numberOfPackages)  # without this transformation each value will be saved as list
   
   # quantity in each package
   data.items$quantityByPackage <- lapply(data.items$content, function(data){
     numberVector <- strsplit(as.character(data), "X")[[1]]
-    if(length(numberVector) > 1)
+    if(length(numberVector) == 3)
+      result = numberVector[3]
+    else if(length(numberVector) == 2)
       result = numberVector[2]
     else
       result = numberVector[1]
     result
   })
-  data.items$quantityByPackage <- as.character(data.items$quantityByPackage)  # without this transformation each value will be saved as list
+  data.items$quantityByPackage <- as.numeric(data.items$quantityByPackage)  # without this transformation each value will be saved as list
+  
+  # total number of pieces
+  data.items$totalNumberOfPieces <- data.items$numberOfPackages * data.items$quantityByPackage
   
   data.items
 }
@@ -99,6 +111,12 @@ createEngineeredFeaturesForDataTrainItems <- function(data.train.items){
   data.train.items$diff_rrp_price <- data.train.items$rrp - data.train.items$price
   # absolute difference between rrp and competitorPrice (= rrp - competitorPrice)
   data.train.items$diff_rrp_competitorPrice <- data.train.items$rrp - data.train.items$competitorPrice
+  # price per piece (price / total number of pieces)
+  data.train.items$pricePerPiece <- data.train.items$price / data.train.items$totalNumberOfPieces
+  # competitorPrice per piece (competitorPrice / total number of pieces)
+  data.train.items$competitorPricePerPiece <- data.train.items$competitorPrice / data.train.items$totalNumberOfPieces
+  # rrp per piece (rrp / total number of pieces)
+  data.train.items$rrpPerPiece <- data.train.items$rrp / data.train.items$totalNumberOfPieces
   
   data.train.items
 }
