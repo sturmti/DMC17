@@ -109,8 +109,14 @@ createEngineeredFeaturesForDataTrainItems <- function(data.train.items){
   ## based on rrp, price, competitorPrice
   # absolute difference between rrp and price (= rrp - price)
   data.train.items$diff_rrp_price <- data.train.items$rrp - data.train.items$price
+  # relative difference between rrp and price (= (rrp - price)/rrp)
+  data.train.items$ratio_diff_rrp_price_to_rrp <- data.train.items$diff_rrp_price / data.train.items$rrp
   # absolute difference between rrp and competitorPrice (= rrp - competitorPrice)
   data.train.items$diff_rrp_competitorPrice <- data.train.items$rrp - data.train.items$competitorPrice
+  # relative difference between rrp and competitorPrice (= (rrp - competitorPrice)/rrp)
+  data.train.items$ratio_diff_rrp_competitorPrice_to_rrp <- data.train.items$diff_rrp_competitorPrice / data.train.items$rrp
+  
+  ## based on totalNumberOfPieces
   # price per piece (price / total number of pieces)
   data.train.items$pricePerPiece <- data.train.items$price / data.train.items$totalNumberOfPieces
   # competitorPrice per piece (competitorPrice / total number of pieces)
