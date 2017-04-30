@@ -55,9 +55,12 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   # mean price per product
   meanPricePerProduct <- setNames(aggregate(x = data.train$price, by = list(pid = data.train$pid), FUN = mean), c("pid", "meanPricePerProduct"))
   data.train <- data.table(left_join(data.train, data.table(meanPricePerProduct), by=c("pid" = "pid")))
-  # number of transactions per product
+  # number of transactions per product, number orders per product, order ratio
   countPerProduct <- setNames(aggregate(x = data.train$pid, by = list(pid = data.train$pid), FUN = length), c("pid", "productActionCounter"))
-  data.train <- data.table(left_join(data.train, data.table(countPerProduct), by=c("pid" = "pid")))
+  countPerOrderProduct <- setNames(aggregate(x = data.train$order, by = list(pid = data.train$pid), FUN = sum), c("pid", "productOrderCounter"))
+  data.temp <- data.table(left_join(data.table(countPerProduct), data.table(countPerOrderProduct), by=c("pid" = "pid")))
+  data.temp$productOrderRatio <- (data.temp$productOrderCounter / data.temp$productActionCounter)
+  data.train <- data.table(left_join(data.train, data.temp, by=c("pid" = "pid")))
   
   data.train
 }
