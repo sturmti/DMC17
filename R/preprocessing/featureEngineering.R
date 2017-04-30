@@ -21,13 +21,13 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   # indicator for month
   data.train$month <- as.numeric(format(data.train$date, "%m")) - 9 # the "-9" is necessary because we want 1,2,3 and not 10,11,12 
   # indicator for holidays
-  data.train$holiday <- lapply(data.train$date, function(date){
-    ifelse(date %in% c("2016-10-03", "2016-10-31", "2016-11-01", "2016-10-31", "2016-12-25","2016-12-26"), 1, 0)
-  })
+  #data.train$holiday <- lapply(data.train$date, function(date){
+  #  ifelse(date %in% c("2016-10-03", "2016-10-31", "2016-11-01", "2016-10-31", "2016-12-25","2016-12-26"), 1, 0)
+  #})
   #indicator for weekend
-  data.train$weekend <- lapply(data.train$date, function(date){
-    ifelse(weekdays(date) %in% c("Saturday", "Sunday"), 1, 0)
-  })
+ # data.train$weekend <- lapply(data.train$date, function(date){
+  #  ifelse(weekdays(date) %in% c("Saturday", "Sunday"), 1, 0)
+  #})
   
   ## based on click, basket, order
   # aggregates the features click, baset, order into one single feature
