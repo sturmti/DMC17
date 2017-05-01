@@ -1,5 +1,6 @@
 source("utils/loadData.R")
 source("preprocessing/featureEngineering.R")
+source("preprocessing/dataCleaning.R")
 library(dplyr)
 
 #' Initialize data.train
@@ -16,6 +17,7 @@ initializeDataTrain <- function(){
 #' @return A data.table containing the items.csv data with the additional engineered features.
 initializeDataItems <- function(){
   data.items <- getItemData()
+  data.items <- cleanDataItems(data.items)
   data.items <- createEngineeredFeaturesForDataItems(data.items)
   data.items
 }
