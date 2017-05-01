@@ -14,26 +14,46 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   # indicator for weekday name
   data.train$weekday_name <- weekdays(data.train$date)
   # indicator for week
-  #data.train$week <- as.numeric( format(data.train$date-2, "%W"))  # "-2" because it starts at the first sunday
-  #data.train$week <- round(ifelse(data.train$day/7 < 0.5, data.train$day/7, data.train$day/7-0.5)) + 1
+  #data.train$week <- as.numeric( format(data.train$date-2, "%W"))
+  data.train$week <- ifelse(data.train$day %% 7 == 0, data.train$day %/% 7, data.train$day %/% 7 + 1)
   #indicator for month half
   data.train$monthHalf <- ifelse(as.numeric(format(data.train$date, "%d")) > 15, 2, 1)
   # indicator for month
   data.train$month <- as.numeric(format(data.train$date, "%m")) - 9 # the "-9" is necessary because we want 1,2,3 and not 10,11,12 
   # indicator for holidays
-  #data.train$holiday <- lapply(data.train$date, function(date){
-  #  ifelse(date %in% c("2016-10-03", "2016-10-31", "2016-11-01", "2016-10-31", "2016-12-25","2016-12-26"), 1, 0)
-  #})
+  data.train <- within(data.train, {
+    holiday = ifelse(data.train$day %in% c(3, 31, 32, 86, 87), 1, 0)
+  })
   #indicator for weekend
- # data.train$weekend <- lapply(data.train$date, function(date){
-  #  ifelse(weekdays(date) %in% c("Saturday", "Sunday"), 1, 0)
-  #})
+  data.train <- within(data.train, {
+    weekend = ifelse(data.train$weekday_name %in% c("Saturday", "Sunday"), 1, 0)
+  })
   
   ## based on click, basket, order
   # aggregates the features click, baset, order into one single feature
   data.train <- within(data.train, {
     actionType = ifelse(data.train$click == 1, "click", ifelse(data.train$basket == 1, "basket", "order"))
   })
+  # indicator if product has already been sold on the same day
+  check.if.contained <- function(current.pid, current.lineID, current.day){
+    current.pid %in% subset(data.train[day == current.day], data.train$lineID < current.lineID)$pid
+  }
+ # data.train$alreadyBoughtOnSameDay <- lapply(data.train, function(data){
+  #  ifelse(check.if.contained(data$pid, data$lineID, data$day), 1, 0)
+  #})
+  
+  data.train <- within(data.train, {
+    alreadyBoughtOnSameDay =  ifelse(check.if.contained(data.train$pid, data.train$lineID, data.train$day), 1, 0)
+  })
+  
+  #data.train <- within(data.train, {
+   # alreadyBoughtOnSameDay = ifelse(data.train$pid %in% subset(data.train[day == data.train$day], lineID < data.train$lineID)$pid, 1, 0)
+  #})
+  
+  
+  # counter for the amount of ordered amount per day
+  
+  
   ## based on revenue, price
   # quantity of ordered products, NA if action is click or basket
   data.train <- within(data.train, {

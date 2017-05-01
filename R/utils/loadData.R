@@ -32,10 +32,9 @@ getTrainData <- function(){
   # Import Data
   data.train <- data.table(read.csv(file = getFilePath("train.csv"), header = T, sep = "|"))
   # factorize the polynominal columns: 
-  #    - factored: lineID, pi
-  #    - ordered: availability
-  data.train$lineID <- factor(data.train$lineID)
-  data.train$pid <- factor(data.train$pid)
+  #    - ordered: lineID, pid, availability
+  data.train$lineID <- ordered(data.train$lineID)
+  data.train$pid <- ordered(data.train$pid)
   data.train$availability <- ordered(data.train$availability, levels = c(1, 2, 3, 4))
   data.train
 }
