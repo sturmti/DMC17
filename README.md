@@ -10,6 +10,10 @@ https://1drv.ms/f/s!AnXUcj9hNuULgepcK6EeTXRP9LwM_Q
 Please upload each new created CSV file that you want to share into this Google Drive directory (please use a correct name versioning as file name):  
 https://drive.google.com/drive/folders/0BzZHsv2pm984V25FM1g1UVdQbmM?usp=sharing  
 
+## Server
+**Host:** dws-01.informatik.uni-mannheim.de
+**User:** datam4
+**Password:** cWD2d3kX
 
 ## Task
 Contains the official DMC 2017 task pdfs.
