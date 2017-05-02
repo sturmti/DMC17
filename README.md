@@ -11,8 +11,8 @@ Please upload each new created CSV file that you want to share into this Google 
 https://drive.google.com/drive/folders/0BzZHsv2pm984V25FM1g1UVdQbmM?usp=sharing  
 
 ## Server
-**Host:** dws-01.informatik.uni-mannheim.de
-**User:** datam4
+**Host:** dws-01.informatik.uni-mannheim.de  
+**User:** datam4  
 **Password:** cWD2d3kX
 
 ## Task
