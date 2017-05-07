@@ -35,16 +35,16 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
     actionType = ifelse(data.train$click == 1, "click", ifelse(data.train$basket == 1, "basket", "order"))
   })
   # indicator if product has already been sold on the same day
-  check.if.contained <- function(current.pid, current.lineID, current.day){
-    current.pid %in% subset(data.train[day == current.day], data.train$lineID < current.lineID)$pid
-  }
+  #check.if.contained <- function(current.pid, current.lineID, current.day){
+  #  current.pid %in% subset(data.train[day == current.day], data.train$lineID < current.lineID)$pid
+  # }
  # data.train$alreadyBoughtOnSameDay <- lapply(data.train, function(data){
   #  ifelse(check.if.contained(data$pid, data$lineID, data$day), 1, 0)
   #})
   
-  data.train <- within(data.train, {
-    alreadyBoughtOnSameDay =  ifelse(check.if.contained(data.train$pid, data.train$lineID, data.train$day), 1, 0)
-  })
+  #data.train <- within(data.train, {
+   # alreadyBoughtOnSameDay =  ifelse(check.if.contained(data.train$pid, data.train$lineID, data.train$day), 1, 0)
+  #})
   
   #data.train <- within(data.train, {
    # alreadyBoughtOnSameDay = ifelse(data.train$pid %in% subset(data.train[day == data.train$day], lineID < data.train$lineID)$pid, 1, 0)
