@@ -28,9 +28,12 @@ getItemData <- function(){
 #' Get the train.csv data
 #' @description Imports the train.csv data, factors certain columns  and returns a corresponding data.table.
 #' @return A data.table containing the train.csv data.
-getTrainData <- function(){
+getTrainData <- function(dropFirst19Days = FALSE){
   # Import Data
   data.train <- data.table(read.csv(file = getFilePath("train.csv"), header = T, sep = "|"))
+  if(dropFirst19Days == TRUE){
+    data.train <- data.train[day > 19]
+  }
   # factorize the polynominal columns: 
   #    - ordered: lineID, pid, availability
   data.train$lineID <- ordered(data.train$lineID)

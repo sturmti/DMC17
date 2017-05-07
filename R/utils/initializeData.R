@@ -6,8 +6,8 @@ library(dplyr)
 #' Initialize data.train
 #' @description Initializes data.train by importing the data and adding the engineered features.
 #' @return A data.table containing the train.csv data with the additional engineered features.
-initializeDataTrain <- function(){
-  data.train <- getTrainData()
+initializeDataTrain <- function(dropFirst19Days = FALSE){
+  data.train <- getTrainData(dropFirst19Days)
   data.train <- createEngineeredFeaturesForDataTrain(data.train)
   data.train
 }
