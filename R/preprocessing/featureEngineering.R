@@ -34,25 +34,6 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   data.train <- within(data.train, {
     actionType = ifelse(data.train$click == 1, "click", ifelse(data.train$basket == 1, "basket", "order"))
   })
-  # indicator if product has already been sold on the same day
-  #check.if.contained <- function(current.pid, current.lineID, current.day){
-  #  current.pid %in% subset(data.train[day == current.day], data.train$lineID < current.lineID)$pid
-  # }
- # data.train$alreadyBoughtOnSameDay <- lapply(data.train, function(data){
-  #  ifelse(check.if.contained(data$pid, data$lineID, data$day), 1, 0)
-  #})
-  
-  #data.train <- within(data.train, {
-   # alreadyBoughtOnSameDay =  ifelse(check.if.contained(data.train$pid, data.train$lineID, data.train$day), 1, 0)
-  #})
-  
-  #data.train <- within(data.train, {
-   # alreadyBoughtOnSameDay = ifelse(data.train$pid %in% subset(data.train[day == data.train$day], lineID < data.train$lineID)$pid, 1, 0)
-  #})
-  
-  
-  # counter for the amount of ordered amount per day
-  
   
   ## based on revenue, price
   # quantity of ordered products, NA if action is click or basket
@@ -81,6 +62,170 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   data.temp <- data.table(left_join(data.table(countPerProduct), data.table(countPerOrderProduct), by=c("pid" = "pid")))
   data.temp$productOrderRatio <- (data.temp$productOrderCounter / data.temp$productActionCounter)
   data.train <- data.table(left_join(data.train, data.temp, by=c("pid" = "pid")))
+  # max price per pid
+  data.train <- merge(data.train, setnames(aggregate(data.train$price, by=list(pid = data.train$pid), FUN=max, na.rm=TRUE), c("pid", "maxPrice")), all.x=TRUE, by=c("pid"))
+  # min price per pid
+  data.train <- merge(data.train, setnames(aggregate(data.train$price, by=list(pid = data.train$pid), FUN=min, na.rm=TRUE), c("pid", "minPrice")), all.x=TRUE, by=c("pid"))
+  # absolute variance of maxPrice and minPrice per pid
+  data.train$maxMinpriceVariance <- data.train$maxPrice - data.train$minPrice
+  # price variance ratio of maxprice and minPrice to maxPrice per pid (= maxMinpriceVariance/maxPrice)
+  data.train$maxMinpriceVarianceRatioToMaxPrice <- data.train$maxMinpriceVariance/data.train$maxPrice
+  # absolute price variance of meanPrice and price per pid 
+  data.train$priceMeanPriceVariance <- data.train$meanPricePerProduct - data.train$price
+  # price variance ratio of meanPrice and price to meanPrice per pid
+  data.train$meanPricePriceVarianceToMeanPrice <- data.train$priceMeanPriceVariance/data.train$meanPricePerProduct
+  
+  ##################### Start: UNTESTED!!! #####################
+  
+  ## features based on dailyPriceDifference
+  data.dailyPriceDifference <- getDailyPriceDifferenceData()
+  data.train$dailyPriceDifference <- data.dailyPriceDifference$dailyPriceDifference
+  # daily price change 
+  data.train$dailyPriceChange <- abs(data.train$dailyPriceDifference)
+  
+  # used for the following features
+  dailyPriceDifferencePerDayAndPid <- setNames(data.table(aggregate(data.train$dailyPriceDifference, by=list(data.train$day, data.train$pid), FUN=mean, na.rm=TRUE)), c("day", "pid", "dailyPriceDifference"))
+  dailyPriceChangePerDayAndPid <- setNames(data.table(aggregate(data.train$dailyPriceChange, by=list(data.train$day, data.train$pid), FUN=mean, na.rm=TRUE)), c("day", "pid", "dailyPriceChange"))
+  
+  # mean daily price change
+  data.train <- merge(data.train, setnames(data.table(aggregate(dailyPriceChangePerDayAndPid$dailyPriceChange, list(dailyPriceChangePerDayAndPid$pid), FUN=mean, na.rm=TRUE)), c("pid", "meanDailyPriceChange")), all.x=TRUE, by=c("pid")) 
+  # mean daily price difference
+  data.train <- merge(data.train, setnames(data.table(aggregate(dailyPriceDifferencePerDayAndPid$dailyPriceDifference, list(dailyPriceDifferencePerDayAndPid$pid), FUN=mean, na.rm=TRUE)), c("pid", "meanDailyPriceDifference")), all.x=TRUE, by=c("pid"))
+  # max daily price difference per pid
+  data.train <- merge(data.train, setnames(data.table(aggregate(dailyPriceDifferencePerDayAndPid$dailyPriceDifference, list(dailyPriceDifferencePerDayAndPid$pid), FUN=max, na.rm=TRUE)), c("pid", "maxDailyPriceDifference")), all.x=TRUE, by=c("pid"))
+  # min daily price difference per pid
+  data.train <- merge(data.train, setnames(data.table(aggregate(dailyPriceDifferencePerDayAndPid$dailyPriceDifference, list(dailyPriceDifferencePerDayAndPid$pid), FUN=min, na.rm=TRUE)), c("pid", "minDailyPriceDifference")), all.x=TRUE, by=c("pid"))
+  # max daily price change
+  data.train <- merge(data.train, setnames(data.table(aggregate(dailyPriceChangePerDayAndPid$dailyPriceChange, list(dailyPriceChangePerDayAndPid$pid), FUN=max, na.rm=TRUE)), c("pid", "maxDailyPriceChange")), all.x=TRUE, by=c("pid"))
+  # min daily price change
+  data.train <- merge(data.train, setnames(data.table(aggregate(dailyPriceChangePerDayAndPid$dailyPriceChange, list(dailyPriceChangePerDayAndPid$pid), FUN=min, na.rm=TRUE)), c("pid", "minDailyPriceChange")), all.x=TRUE, by=c("pid"))
+  # range of daily price difference
+  data.train$dailyPriceDifferenceRange <- data.train$maxDailyPriceDifference - data.train$minDailyPriceDifference
+  # range of daily price change
+  data.train$dailyPriceChangeRange <- data.train$maxDailyPriceChange - data.train$minDailyPriceChange
+  # total number of negative daily price differences (= when the price decreased)
+  data.train <- merge(data.train, setNames(data.table(aggregate(dailyPriceDifferencePerDayAndPid[!is.na(dailyPriceDifference) & dailyPriceDifference < 0]$dailyPriceDifference, by=list(dailyPriceDifferencePerDayAndPid[!is.na(dailyPriceDifference) & dailyPriceDifference < 0]$pid), FUN=length)), c("pid", "totalNumberOfNegativePriceDifferencesOverTime")), all.x=TRUE, by=("pid"))
+  # counter of positive daily price differencs (= when the price increased)
+  data.train <- merge(data.train, setNames(data.table(aggregate(dailyPriceDifferencePerDayAndPid[!is.na(dailyPriceDifference) & dailyPriceDifference > 0]$dailyPriceDifference, by=list(dailyPriceDifferencePerDayAndPid[!is.na(dailyPriceDifference) & dailyPriceDifference > 0]$pid), FUN=length)), c("pid", "totalNumberOfPositivePriceDifferencesOverTime")), all.x=TRUE, by=("pid"))
+  # counter of daily price differences = 0 (= when the price didn't change)
+  data.train <- merge(data.train, setNames(data.table(aggregate(dailyPriceDifferencePerDayAndPid[!is.na(dailyPriceDifference) & dailyPriceDifference == 0]$dailyPriceDifference, by=list(dailyPriceDifferencePerDayAndPid[!is.na(dailyPriceDifference) & dailyPriceDifference == 0]$pid), FUN=length)), c("pid", "totalNumberOfConstantPriceDifferencesOverTime")), all.x=TRUE, by=("pid"))
+  # counter of daily prices != 0 (how often did it change)
+  data.train <- merge(data.train, setNames(data.table(aggregate(dailyPriceDifferencePerDayAndPid[!is.na(dailyPriceDifference) & dailyPriceDifference != 0]$dailyPriceDifference, by=list(dailyPriceDifferencePerDayAndPid[!is.na(dailyPriceDifference) & dailyPriceDifference != 0]$pid), FUN=length)), c("pid", "totalNumberOfNonConstantPriceDifferencesOverTime")), all.x=TRUE, by=("pid"))
+  # flexibility of the daily prices
+  data.train$dailyPriceFlexibility <- data.train$totalNumberOfNonConstantPriceDifferencesOverTime / (data.train$totalNumberOfConstantPriceDifferencesOverTime + data.train$totalNumberOfNonConstantPricesOverTime)
+  # ratio of daily price difference to price
+  data.train$dailyPriceDifferenceRatioToPrice <- data.train$dailyPriceDifference / data.train$price
+  # ratio of daily price difference to mean price
+  data.train$dailyPriceDifferenceRatioToMeanPrice <- data.train$dailyPriceDifference / data.train$meanPricePerProduct
+  # ratio of daily price difference to max price
+  data.train$dailyPriceDifferenceRatioToMaxPrice <- data.train$dailyPriceDifference / data.train$maxPrice
+  # discretized daily price difference
+  data.train$dailyPriceDifferenceDiscretized <- unlist(lapply(data.train$dailyPriceDifference, function(priceDifference){
+    if(is.na(priceDifference)){
+      NA
+    }
+    else if(priceDifference < 0){
+      "decreased"
+    }
+    else if(priceDifference > 0){
+      "increased"
+    }
+    else{
+      "constant"
+    }
+  }))
+  # daily difference of competitorPrice
+  # TODO
+  
+  # daily change of competitorPrice
+ # data.train$dailyCompetitorPriceChange <- abs(data.train$dailyCompetitorPriceChange)
+  # difference between dailyPriceDifference and dailyCompetitorPriceDifference
+#  data.train$differenceDailyPriceDifferenceCompetitorPriceDifference <- data.train$dailyPriceDifference - dailyCompetitorPriceDifference
+  # ratio of differenceDailyPriceDifferenceCompetitorPriceDifference to dailyPriceDifference
+ # data.train$differenceDailyPriceDifferenceCompetitorPriceDifferenceRatioToDailyPriceDifference <- data.table$differenceDailyPriceDifferenceCompetitorPriceDifference / data.table$dailyPriceDifference
+  # ratio of differenceDailyPriceDifferenceCompetitorPriceDifference to comPetitorPriceDifference
+#  data.train$differenceDailyPriceDifferenceCompetitorPriceDifferenceRatioToDailyCompetitorPriceDifference
+  # indicates if the product just got cheaper than the competitors
+ # data.train$justGotCheaper <- sapply(1:nrow(data.train), function(i){
+#    if((data.train[i]$competitorPrice + data.train[i]$dailyCompetitorPriceDifference) > data.train[i]$price){
+#      1
+#    }
+#    else{
+#      0
+ #   }
+#  })
+  # indicates if the product just got more expensive than the competitors
+#  data.train$justGotMoreExpensive <- sapply(1:nrow(data.train), function(i){
+ #   if((data.train[i]$competitorPrice + data.train[i]$dailyCompetitorPriceDifference) < data.train[i]$price){
+#      1
+#    }
+#    else{
+#      0
+#    }
+#  })
+  
+  
+  ##features based on: amountAlreadyBoughtOnSameDay
+  # infdicates if amountAlreadyBoughtOnSameDay is at least 1 or not
+#  data.train$alreadyBoughtOnSameDay <- lapply(data.train$amountAlreadyBoughtOnSameDay, function(i){
+#    if(i > 0){
+#      1
+#    }
+#    else{
+#      0
+#    }
+#  })
+  # mean daily order per pid
+  #TODO
+  # ratio of amountAlreadyBoughtOnSameDay to meanDailyOrder
+#  data.train$amountAlreadyBoughtOnSameDayRatioToMeanDailyOrder <- data.train$amountAlreadyBoughtOnSameDay / data.train%meanDailyOrder
+  # amountAlreadyBoughtOnSameDay including the current order (if action is an order action)
+#  data.train$amountAlreadyBoughtOnSameDayIncludingCurrent <- data.train$amountAlreadyBoughtOnSameDay + data.train$order
+  
+  # quantity already bought on same day
+  # TODO
+  # mean of the daily quantity
+  # TODo
+  # ratio of quantityAlreadyBoughtOnSameDay to meanDailyQuantity
+ # data.train$quantityAlreadyBoughtOnSameDayRatioToMeanDailyQuantity <- data.train$quantityAlreadyBoughtOnSameDay / data.train$meanDailyQuantity
+  #quantityAlreadyBoughtOnSameDay including current
+  #data.train$quantityAlreadyBoughtOnSameDayIncludingCurrent <- data.train$quantityAlreadyBoughtOnSameDay + data.train$quantitydata.train$quantityAlreadyBoughtOnSameDay
+  
+  
+  ##################### End: UNTESTED!!! #####################
+  
+  ##############  Start: FEATURES WITH HIGH CREATION TIME (commented out due to this):   ##############
+  
+  
+  # daily price difference for each pid
+  #dailyPriceDiff <- {
+  #  pids <- unique(data.train$pid)
+  #  pricePerPidAndDay <- unique(data.train[, c("pid", "day")])
+  #  pricePerPidAndDay$price <- data.table(aggregate(x = data.train$price, by = list(pid = data.train$pid, day = data.train$day), FUN= mean))[order(pid, day)]$x     #aggregate(x = data.all$quantity, by = list(numberOfPackages = data.all$numberOfPackages), FUN = mean, na.rm=TRUE)
+  #  result <- c()
+  #  c(result, sapply(1:length(pids), function(i){
+  #    if(i %% 1000 == 0){
+  #      print(paste0(round(i/21758 * 100, 2), "%"))
+  #    }
+  #    currentPidData <- pricePerPidAndDay[pid == pids[i]]
+  #    priceDiffsForCurrentPidData <- vapply(1:nrow(currentPidData), function(j){
+  #      if(j == 1){
+  #        NA
+  #      }
+  #      else{
+  #        currentPidData[j]$price - currentPidData[j-1]$price
+  #      }
+  #    }, FUN.VALUE = numeric(1))
+  #    priceDiffsForCurrentPidData
+  #  }))
+  #}
+  #pricePerPidAndDay$dailyPriceDifference <- unlist(dailyPriceDiff)
+  #data.train <- merge(data.train, pricePerPidAndDay[, c("pid", "day", "dailyPriceDifference")], all.x=TRUE, by=c("pid", "day"))
+  
+  
+  ##############  End: FEATURES WITH HIGH CREATION TIME (commented out due to this):   ##############
+  
+  
   
   data.train
 }

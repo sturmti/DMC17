@@ -6,7 +6,7 @@ if (!require(data.table)) install.packages("data.table")
 #' @param file.name file name as string.
 #' @return A path as string
 getFilePath <- function(file.name){
-  path <- "/Users/TimoSturm/Documents/Masterstudium/2. Semester/Data Mining II/Data Mining Cup 2017/DMC_2017_task/"
+  path <- "C:\\Users\\i852496\\Documents\\Data Mining Cup 2017\\"
   paste0(path, file.name)
 }
 
@@ -32,7 +32,7 @@ getTrainData <- function(dropFirst19Days = FALSE){
   # Import Data
   data.train <- data.table(read.csv(file = getFilePath("train.csv"), header = T, sep = "|"))
   if(dropFirst19Days == TRUE){
-    data.train <- data.train[day > 19]
+    data.train <- data.train[day > 22]
   }
   # factorize the polynominal columns: 
   #    - ordered: lineID, pid, availability
@@ -55,4 +55,14 @@ getClassData <- function(){
   data.class$pid <- factor(data.class$pid)
   data.class$availability <- ordered(data.class$availability, levels = c(1, 2, 3, 4))
   data.class
+}
+
+#' Get the daily price difference data
+#' @description Imports the train_dailyPriceDifference.csv data, factors the pid column and returns a corresponding data.table.
+#' @return A data.table containing the train_dailyPriceDifference.csv data.
+getDailyPriceDifferenceData <- function(){
+  data.dailyPriceDifference <- data.table(read.csv(file = getFilePath("train_dailyPriceDifference.csv"), header = T, sep = "|"))
+  data.dailyPriceDifference$lineID <- ordered(data.dailyPriceDifference$lineID)
+  data.dailyPriceDifference <- data.dailyPriceDifference[order(lineID)]
+  data.dailyPriceDifference
 }

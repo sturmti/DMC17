@@ -25,8 +25,8 @@ initializeDataItems <- function(){
 #' Initialize data.all
 #' @description Initializes data.items by importing the data and adding the engineered features.
 #' @return A data.table containing the items.csv data with the additional engineered features.
-initializeJoinedData <- function(){
-  data.train <- initializeDataTrain()
+initializeJoinedData <- function(dropFirst19Days = FALSE){
+  data.train <- initializeDataTrain(dropFirst19Days)
   data.items <- initializeDataItems()
   data.all <- joinData(data.train, data.items)
   data.all <- createEngineeredFeaturesForDataTrainItems(data.all)

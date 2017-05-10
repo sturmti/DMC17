@@ -6,11 +6,13 @@ source("utils/storeData.R")
 library(ggplot2)
 install.packages("gdata")
 library(gdata)
+library(plyr)
 
 ####### Initialization ####### 
 data.items <- getItemData()
 data.train <- getTrainData(TRUE)
 data.class <- getClassData()
+data.dailyPriceDifference <- getDailyPriceDifferenceData()
 
 data.train <- initializeDataTrain(TRUE)
 data.items <- initializeDataItems()
@@ -19,7 +21,7 @@ data.all <- initializeJoinedData(TRUE)
 
 ####### CSV File Creation ####### 
 storeData(data = data.items, file.name = "items_v1.5.csv")
-storeData(data = data.train, file.name = "train_v1.6.csv")
+storeData(data = data.train.with.daily.price.difference[, c("lineID", "dailyPriceDifference")], file.name = "train_dailyPriceDifference.csv")
 storeData(data = data.all, file.name = "trainItems_v1.6.csv")
 
 
@@ -28,11 +30,20 @@ data.items[content == "40X0.5"]
 class(data.items$numberOfPackages)
 class(data.items$quantityByPackage)
 
+data.train.with.daily.price.difference[pid == 1]
 
+nrow(data.train.with.daily.price.difference)
+nrow(data.train2)
 
+data.train$dailyPriceDifference <- data.dailyPriceDifference[order(lineID)]$dailyPriceDifference
+data.train.with.daily.price.difference
 
+abs(data.train2[pid == 1]$dailyPriceDifference)
+data.train2[pid == 1]
 
+?plyr::count
 
+abs(data.train2$dailyPriceDifference)
 
 ggplot(data = data.train[pid==11575], aes(x = day, y = competitorPrice)) + geom_line()
 
@@ -40,6 +51,8 @@ ggplot(data.train[pid== 21086], aes(day)) +
   geom_line(aes(y = competitorPrice, colour = "competitorPrice")) + 
   geom_line(aes(y = revenue, colour = "revenue")) +
   geom_line(aes(y = price, colour = "price"))
+
+data.train
 
 
 #################### START: Competitor == 0 Clean up ##########################
@@ -122,7 +135,7 @@ competitorPriceCleanedZeros <- {
 ############### Start: Daily Price Difference ############### 
 
 ### FINAL: ###
-data.train.with.daily.pricedifference <- {
+dailyPriceDiff <- {
   pids <- unique(data.train$pid)
   pricePerPidAndDay <- unique(data.train[, c("pid", "day")])
   pricePerPidAndDay$price <- data.table(aggregate(x = data.train$price, by = list(pid = data.train$pid, day = data.train$day), FUN= mean))[order(pid, day)]$x     #aggregate(x = data.all$quantity, by = list(numberOfPackages = data.all$numberOfPackages), FUN = mean, na.rm=TRUE)
@@ -142,23 +155,75 @@ data.train.with.daily.pricedifference <- {
     }, FUN.VALUE = numeric(1))
     priceDiffsForCurrentPidData
   }))
-  pricePerPidAndDay$dailyPriceDifference <- unlist(dailyPriceDiff)
-  merge(data.train, pricePerPidAndDay[, c("pid", "day", "dailyPriceDifference")], all.x=TRUE, by=c("pid", "day"))
 }
+pricePerPidAndDay$dailyPriceDifference <- unlist(dailyPriceDiff)
+data.train.with.daily.price.difference <- merge(data.train, pricePerPidAndDay[, c("pid", "day", "dailyPriceDifference")], all.x=TRUE, by=c("pid", "day"))
 
 ############### End: Daily Price Difference ############### 
 
+############### Start: Daily competitorPrice Difference ############### 
 
+### FINAL: ###
+dailyCompetitorPriceDiff <- {
+  pids <- unique(data.train$pid)
+  competitorPricePerPidAndDay <- unique(data.train[, c("pid", "day")])
+  competitorPricePerPidAndDay$competitorPrice <- data.table(aggregate(x = data.train$competitorPrice, by = list(pid = data.train$pid, day = data.train$day), FUN= mean))[order(pid, day)]$x     #aggregate(x = data.all$quantity, by = list(numberOfPackages = data.all$numberOfPackages), FUN = mean, na.rm=TRUE)
+  result <- c()
+  c(result, sapply(1:length(pids), function(i){
+    if(i %% 1000 == 0){
+      print(paste0(round(i/21758 * 100, 2), "%"))
+    }
+    currentPidData <- competitorPricePerPidAndDay[pid == pids[i]]
+    competitorPriceDiffsForCurrentPidData <- vapply(1:nrow(currentPidData), function(j){
+      if(j == 1 | is.na(currentPidData[j]$competitorPrice) | currentPidData[j-1]$competitorPrice){
+        NA
+      }
+      else{
+        currentPidData[j]$competitorPrice - currentPidData[j-1]$competitorPrice
+      }
+    }, FUN.VALUE = numeric(1))
+    competitorPriceDiffsForCurrentPidData
+  }))
+}
+competitorPricePerPidAndDay$dailycompetitorPriceDifference <- unlist(dailycompetitorPriceDiff)
+data.train.with.daily.competitorPrice.difference <- merge(data.train, competitorPricePerPidAndDay[, c("pid", "day", "dailyCompetitorPriceDifference")], all.x=TRUE, by=c("pid", "day"))
+
+############### End: Daily competitorPrice Difference ############### 
+
+
+
+data.train.with.daily.price.difference
 
 ############### Start: amountAlreadyBoughtOnSameDay ############### 
  
 ##### FINAL: ##### Nur [1:100] muss entfernt werden!
+data.train.with.amountAlreadyBoughtOnSameDay <- {
+  result <- c()
+  result <- c(result, sapply(23:max(data.train$day), function(i){
+    #print(i)
+    print(paste0(round(((i-22)/72)*100,2), "%"))
+    all.actions.per.day <- data.train[day == i]
+    bought.products.per.day <- data.train[order == 1 & day == i]
+    already.bought.products.for.each.action.per.day <- vapply(1:nrow(all.actions.per.day), function(j){
+      #print(paste0("j: ", j))
+      nrow(bought.products.per.day[lineID < all.actions.per.day[j]$lineID & pid == all.actions.per.day[j]$pid])
+    }, FUN.VALUE = numeric(1))
+    already.bought.products.for.each.action.per.day
+  }))
+  resultTable <- data.train
+  resultTable$amountAlreadyBoughtOnSameDay <- result
+  resultTable
+}
+
+#data.train[day < 25][day == 24][1:100][, c("pid", "day", "order")]
+
+#beschränkter Umfang (= mit [1:100]):
 amountAlreadyBoughtOnSameDay <- {
   result <- c()
-  result <- c(result, vapply(20:max(data.train[day < 22]$day), function(i){
-    print(paste0("i: ", i))
-    all.actions.per.day <- data.train[day < 22][day == i][1:100]
-    bought.products.per.day <- data.train[day < 22][order == 1 & day == i][1:100]
+  result <- c(result, vapply(23:max(data.train[day < 25]$day), function(i){
+    print(paste0(round(i/72*100,2), "%"))
+    all.actions.per.day <- data.train[day < 25][day == i][1:100]
+    bought.products.per.day <- data.train[day < 25][order == 1 & day == i][1:100]
     already.bought.products.for.each.action.per.day <- vapply(1:nrow(all.actions.per.day), function(j){
       print(paste0("j: ", j))
       nrow(bought.products.per.day[lineID < all.actions.per.day[j]$lineID & pid == all.actions.per.day[j]$pid])
