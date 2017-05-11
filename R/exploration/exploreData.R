@@ -10,7 +10,7 @@ library(plyr)
 
 ####### Initialization ####### 
 data.items <- getItemData()
-data.train <- getTrainData(TRUE)
+data.train <- getTrainData()
 data.class <- getClassData()
 data.dailyPriceDifference <- getDailyPriceDifferenceData()
 
@@ -21,8 +21,8 @@ data.all <- initializeJoinedData(TRUE)
 
 ####### CSV File Creation ####### 
 storeData(data = data.items, file.name = "items_v1.5.csv")
-storeData(data = data.train.with.daily.price.difference[, c("lineID", "dailyPriceDifference")], file.name = "train_dailyPriceDifference.csv")
-storeData(data = data.all, file.name = "trainItems_v1.6.csv")
+storeData(data = data.train, file.name = "train_1.9.csv")
+storeData(data = data.all, file.name = "trainItems_v1.8.csv")
 
 
 #3480: record with content == "40X0.5"
@@ -41,8 +41,13 @@ data.train.with.daily.price.difference
 abs(data.train2[pid == 1]$dailyPriceDifference)
 data.train2[pid == 1]
 
-?plyr::count
+data.train[, c("day", "pid", "price", "competitorPrice", "dailyPriceDifference", "dailyCompetitorPriceDifference", "justGotCheaperThanCompetitors", "justGotMoreExpensiveThanCompetitors")][pid == 2342]
 
+class(as.character(unique(data.train$dailyPriceDifferenceDiscretized)))
+
+data.all$dailyPriceDifferenceDiscretized <- unlist(data.all$dailyPriceDifferenceDiscretized)
+
+      
 abs(data.train2$dailyPriceDifference)
 
 ggplot(data = data.train[pid==11575], aes(x = day, y = competitorPrice)) + geom_line()
@@ -54,6 +59,9 @@ ggplot(data.train[pid== 21086], aes(day)) +
 
 data.train
 
+abs(c(NA, NA, 1, -1))
+data.CompetitorPriceDifference$dailyCompetitorPriceDifference <- getDailyCompetitorPriceDifferenceData()
+abs(data.CompetitorPriceDifference$dailyCompetitorPriceDifference)[2296179]
 
 #################### START: Competitor == 0 Clean up ##########################
 
@@ -129,15 +137,15 @@ competitorPriceCleanedZeros <- {
 }
 
 #################### END: Competitor == 0 Clean up ##########################
-
-
+?order
+data.train
 
 ############### Start: Daily Price Difference ############### 
 
 ### FINAL: ###
 dailyPriceDiff <- {
-  pids <- unique(data.train$pid)
-  pricePerPidAndDay <- unique(data.train[, c("pid", "day")])
+  pids <- sort(unique(data.train$pid))
+  pricePerPidAndDay <- unique(data.train[, c("pid", "day")])[order(cols=pid, day)]
   pricePerPidAndDay$price <- data.table(aggregate(x = data.train$price, by = list(pid = data.train$pid, day = data.train$day), FUN= mean))[order(pid, day)]$x     #aggregate(x = data.all$quantity, by = list(numberOfPackages = data.all$numberOfPackages), FUN = mean, na.rm=TRUE)
   result <- c()
   c(result, sapply(1:length(pids), function(i){
@@ -158,15 +166,21 @@ dailyPriceDiff <- {
 }
 pricePerPidAndDay$dailyPriceDifference <- unlist(dailyPriceDiff)
 data.train.with.daily.price.difference <- merge(data.train, pricePerPidAndDay[, c("pid", "day", "dailyPriceDifference")], all.x=TRUE, by=c("pid", "day"))
+data.train[day == 1][1:10, ]
+data.train.with.daily.price.difference[pid == 1][, c("pid", "day", "price", "dailyPriceDifference")]
+data.train[pid == 6570]
+pricePerPidAndDay.ordered <-  order(pricePerPidAndDay, cols=c("pid"))
+pricePerPidAndDay$dailyPriceDifference <- unlist(dailyPriceDiff)
 
+?order
 ############### End: Daily Price Difference ############### 
 
 ############### Start: Daily competitorPrice Difference ############### 
 
 ### FINAL: ###
 dailyCompetitorPriceDiff <- {
-  pids <- unique(data.train$pid)
-  competitorPricePerPidAndDay <- unique(data.train[, c("pid", "day")])
+  pids <- sort(unique(data.train$pid))
+  competitorPricePerPidAndDay <- unique(data.train[, c("pid", "day")])[order(cols=pid)]
   competitorPricePerPidAndDay$competitorPrice <- data.table(aggregate(x = data.train$competitorPrice, by = list(pid = data.train$pid, day = data.train$day), FUN= mean))[order(pid, day)]$x     #aggregate(x = data.all$quantity, by = list(numberOfPackages = data.all$numberOfPackages), FUN = mean, na.rm=TRUE)
   result <- c()
   c(result, sapply(1:length(pids), function(i){
@@ -175,7 +189,13 @@ dailyCompetitorPriceDiff <- {
     }
     currentPidData <- competitorPricePerPidAndDay[pid == pids[i]]
     competitorPriceDiffsForCurrentPidData <- vapply(1:nrow(currentPidData), function(j){
-      if(j == 1 | is.na(currentPidData[j]$competitorPrice) | currentPidData[j-1]$competitorPrice){
+      if(j == 1){
+        NA
+      }
+      else if(is.na(currentPidData[j]$competitorPrice)){
+        NA
+      }
+      else if(is.na(currentPidData[j-1]$competitorPrice)){
         NA
       }
       else{
@@ -185,14 +205,19 @@ dailyCompetitorPriceDiff <- {
     competitorPriceDiffsForCurrentPidData
   }))
 }
-competitorPricePerPidAndDay$dailycompetitorPriceDifference <- unlist(dailycompetitorPriceDiff)
+competitorPricePerPidAndDay$dailyCompetitorPriceDifference <- unlist(dailyCompetitorPriceDiff)
 data.train.with.daily.competitorPrice.difference <- merge(data.train, competitorPricePerPidAndDay[, c("pid", "day", "dailyCompetitorPriceDifference")], all.x=TRUE, by=c("pid", "day"))
+data.train.with.daily.price.difference[, c("pid", "day", "price", "dailyPriceDifference")]
 
 ############### End: Daily competitorPrice Difference ############### 
+data.train.with.daily.competitorPrice.difference[pid == 2537][, c("day","pid","competitorPrice", "dailyCompetitorPriceDifference")]
+
+round(unlist(dailyCompetitorPriceDiff),2)
+data.train.ordered <- data.train[order(cols=pid)]
+data.train.ordered$dailyCompetitorPriceDifference <- round(unlist(dailyCompetitorPriceDiff),2)
+competitorPricePerPidAndDay$dailyCompetitorPriceDifference <- round(unlist(dailyCompetitorPriceDiff),2)
 
 
-
-data.train.with.daily.price.difference
 
 ############### Start: amountAlreadyBoughtOnSameDay ############### 
  
@@ -233,5 +258,10 @@ amountAlreadyBoughtOnSameDay <- {
 }
 
 ############### End: amountBoughtOnSameDay ###############
+
+data.train.testSet <- data.train
+
+
+lapply()
 
 

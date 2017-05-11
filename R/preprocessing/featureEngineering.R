@@ -2,6 +2,9 @@
 #' @description Computes and adds the engineered features to the data.train data set.
 #' @return A data.table containing the enhanced data.train data set.
 createEngineeredFeaturesForDataTrain <- function(data.train){
+  # removing test set information (only necessary to use for order or/and revenue based features!)
+  data.train <- data.train[day < 64]
+
   ## based on day
   # timestamp (format: mm/dd/YYYY) starts on 01.10.2016
   data.train$date <- as.Date("2016-10-01") + data.train$day - 1
@@ -32,16 +35,29 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   ## based on click, basket, order
   # aggregates the features click, baset, order into one single feature
   data.train <- within(data.train, {
-    actionType = ifelse(data.train$click == 1, "click", ifelse(data.train$basket == 1, "basket", "order"))
+    actionType = ifelse(data.train$click == 1, "click", ifelse(data.train$basket == 1, "basket", ifelse(data.train$order == 1, "order", NA)))
   })
   
   ## based on revenue, price
   # quantity of ordered products, NA if action is click or basket
   data.train <- within(data.train, {
-    quantity = ifelse(data.train$order == 1, (data.train$revenue / data.train$price), NA)
+    quantity = ifelse(data.train$order == 1, (data.train$revenue / data.train$price), 0)
   })
   ## based on price, competitorPrice
-  # diff and ratios of diff between price, competitorPrice
+  # classifies the price into 3 categories based on the overall price quantiles
+  data.train.priceQuantiles <- quantile(data.train$price)
+  data.train$priceCategory <- vapply(data.train$price, function(current.price){
+    if(current.price <= data.train.priceQuantiles[2]){
+      "low_price"
+    }
+    else if(current.price <= data.train.priceQuantiles[3]){
+      "middle_price"
+    }
+    else{
+      "high_price"
+    }
+  }, FUN.VALUE = character(1))
+  # diff and ratios of difference between price, competitorPrice
   data.train$diffPriceCompetitorPrice <- data.train$price - data.train$competitorPrice
   data.train$ratioDiffPriceCompetitorPriceToPrice <- (data.train$price - data.train$competitorPrice)/data.train$price
   data.train$ratioDiffPriceCompetitorPriceToCompetitorPrice <- (data.train$price - data.train$competitorPrice)/data.train$competitorPrice
@@ -74,12 +90,11 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
   data.train$priceMeanPriceVariance <- data.train$meanPricePerProduct - data.train$price
   # price variance ratio of meanPrice and price to meanPrice per pid
   data.train$meanPricePriceVarianceToMeanPrice <- data.train$priceMeanPriceVariance/data.train$meanPricePerProduct
-  
   ##################### Start: UNTESTED!!! #####################
   
   ## features based on dailyPriceDifference
-  data.dailyPriceDifference <- getDailyPriceDifferenceData()
-  data.train$dailyPriceDifference <- data.dailyPriceDifference$dailyPriceDifference
+  data.train <- merge(data.train, getDailyPriceDifferenceData(), all.x=TRUE, by=c("lineID"))
+
   # daily price change 
   data.train$dailyPriceChange <- abs(data.train$dailyPriceDifference)
   
@@ -134,35 +149,104 @@ createEngineeredFeaturesForDataTrain <- function(data.train){
       "constant"
     }
   }))
+  
+  print("daily difference of competitorPrice")
+  
   # daily difference of competitorPrice
-  # TODO
+  data.train <- merge(data.train, getDailyCompetitorPriceDifferenceData(), all.x=TRUE, by=c("lineID"))
   
   # daily change of competitorPrice
- # data.train$dailyCompetitorPriceChange <- abs(data.train$dailyCompetitorPriceChange)
+  data.train$dailyCompetitorPriceChange <- abs(data.train$dailyCompetitorPriceDifference) 
+  
+  print("ratios")
+  
   # difference between dailyPriceDifference and dailyCompetitorPriceDifference
-#  data.train$differenceDailyPriceDifferenceCompetitorPriceDifference <- data.train$dailyPriceDifference - dailyCompetitorPriceDifference
+  data.train$differenceDailyPriceDifferenceCompetitorPriceDifference <- data.train$dailyPriceDifference - data.train$dailyCompetitorPriceDifference
   # ratio of differenceDailyPriceDifferenceCompetitorPriceDifference to dailyPriceDifference
- # data.train$differenceDailyPriceDifferenceCompetitorPriceDifferenceRatioToDailyPriceDifference <- data.table$differenceDailyPriceDifferenceCompetitorPriceDifference / data.table$dailyPriceDifference
+  data.train$differenceDailyPriceDifferenceCompetitorPriceDifferenceRatioToDailyPriceDifference <- data.train$differenceDailyPriceDifferenceCompetitorPriceDifference / data.train$dailyPriceDifference
   # ratio of differenceDailyPriceDifferenceCompetitorPriceDifference to comPetitorPriceDifference
-#  data.train$differenceDailyPriceDifferenceCompetitorPriceDifferenceRatioToDailyCompetitorPriceDifference
+  data.train$differenceDailyPriceDifferenceCompetitorPriceDifferenceRatioToDailyCompetitorPriceDifference  <- data.train$differenceDailyPriceDifferenceCompetitorPriceDifference / data.train$dailyCompetitorPriceDifference
+  
+  print("Currently MISSING: justGotCheaperThanCompetitors")
+  
+#  dailyCompetitorPriceDifferencePerDayAndPid <- order(setNames(data.table(aggregate(data.train$dailyCompetitorPriceDifference, by=list(data.train$day, data.train$pid), FUN=mean, na.rm=TRUE)), c("day", "pid", "dailyCompetitorPriceDifference")), cols=c(day, pid))
+#  dailyCompetitorPricePerDayAndPid <- order(setNames(data.table(aggregate(data.train$competitorPrice, by=list(data.train$day, data.train$pid), FUN=mean, na.rm=TRUE)), c("day", "pid", "competitorPrice")), cols=c(day, pid))
+#  dailyPricePerDayAndPid <- order(setNames(data.table(aggregate(data.train$price, by=list(data.train$day, data.train$pid), FUN=mean, na.rm=TRUE)), c("day", "pid", "price")), cols=c(day, pid))
+#  dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid <- order(merge(dailyCompetitorPriceDifferencePerDayAndPid, merge(dailyCompetitorPricePerDayAndPid, dailyPricePerDayAndPid, all.x=TRUE, by=c("day", "pid")), all.x=TRUE, by=c("day", "pid")), cols=c(day, pid))
+  
+#  dailyCompetitorPriceDifferencePerDayAndPid$justGotCheaperThanCompetitors <- vapply(1:nrow(dailyCompetitorPriceDifferencePerDayAndPid), function(i){
+#    if(is.na(dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$competitorPrice)){
+#      NA
+#    }
+#    else if(is.na(dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$dailyCompetitorPriceDifference)){
+#      NA
+#    }
+#    else if((dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$competitorPrice - dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$dailyCompetitorPriceDifference > dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$price) & dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$price - dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$dailyPriceDifference > dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$competitorPrice - dailyCompetitorPriceCompetitorPriceDifferencePricePerDayAndPid[i]$dailyCompetitorPrice){
+#      1
+#    }
+#    else{
+#      0
+#    }
+#  }, FUN.VALUE = numeric(1))
+  
+#  data.train <- merge(data.train, dailyCompetitorPriceDifferencePerDayAndPid[, c("day", "pid", "justGotCheaperThanCompetitors")], all.x=TRUE, by=c("day", "pid")) 
+  
+  # INEFFICIENT:
   # indicates if the product just got cheaper than the competitors
- # data.train$justGotCheaper <- sapply(1:nrow(data.train), function(i){
-#    if((data.train[i]$competitorPrice + data.train[i]$dailyCompetitorPriceDifference) > data.train[i]$price){
+#  data.train$justGotCheaperThanCompetitors <- vapply(1:nrow(data.train), function(i){
+#    if(is.na(data.train[i]$competitorPrice)){
+#      NA
+#    }
+#    else if(is.na(data.train[i]$dailyCompetitorPriceDifference)){
+#      NA
+#    }
+#    else if((data.train[i]$competitorPrice + data.train[i]$dailyCompetitorPriceDifference) > data.train[i]$price){
 #      1
 #    }
 #    else{
 #      0
- #   }
-#  })
+#    }
+#  }, FUN.VALUE = numeric(1))
+  
+  print("Currently MISSING: justGotMoreExpensiveThanCompetitors")
+  
+#  dailyCompetitorPriceDifferencePerDayAndPid$justGotMoreExpensiveThanCompetitors <- vapply(1:nrow(dailyCompetitorPriceDifferencePerDayAndPid), function(i){
+#    if(is.na(dailyCompetitorPricePerDayAndPid[i]$competitorPrice)){
+#      NA
+#    }
+#    else if(is.na(dailyCompetitorPriceDifferencePerDayAndPid[i]$dailyCompetitorPriceDifference)){
+#      NA
+#    }
+#    else if((dailyCompetitorPricePerDayAndPid[i]$competitorPrice + dailyCompetitorPriceDifferencePerDayAndPid[i]$dailyCompetitorPriceDifference) < dailyPricePerDayAndPid[i]$price){
+#      1
+#    }
+#    else{
+#      0
+#    }
+#  }, FUN.VALUE = numeric(1))
+  
+ # data.train <- merge(data.train, dailyCompetitorPriceDifferencePerDayAndPid[, c("day", "pid", "justGotMoreExpensiveThanCompetitors")], all.x=TRUE, by=c("day", "pid")) 
+  
+  
+  
+  
+  
+  # INEFFICIENT:
   # indicates if the product just got more expensive than the competitors
-#  data.train$justGotMoreExpensive <- sapply(1:nrow(data.train), function(i){
- #   if((data.train[i]$competitorPrice + data.train[i]$dailyCompetitorPriceDifference) < data.train[i]$price){
+#  data.train$justGotMoreExpensiveThanCompetitors <- vapply(1:nrow(data.train), function(i){
+#    if(is.na(data.train[i]$competitorPrice)){
+#      NA
+#    }
+#    else if(is.na(data.train[i]$dailyCompetitorPriceDifference)){
+#      NA
+#    }
+#    else if((data.train[i]$competitorPrice + data.train[i]$dailyCompetitorPriceDifference) < data.train[i]$price){
 #      1
 #    }
 #    else{
 #      0
 #    }
-#  })
+#  }, FUN.VALUE = numeric(1))
   
   
   ##features based on: amountAlreadyBoughtOnSameDay

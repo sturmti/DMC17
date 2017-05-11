@@ -3,6 +3,6 @@
 #' @param data data table containing the data.
 #' @param file.name name for the csv file.
 storeData <- function(data, file.name){
-  path <- "/Users/TimoSturm/Documents/Masterstudium/2. Semester/Data Mining II/Data Mining Cup 2017/DMC_2017_task/"
+  path <- "C:\\Users\\i852496\\Documents\\Data Mining Cup 2017\\"
   write.table(x = data, file = paste0(path, file.name), sep = "|", quote = FALSE, row.names = FALSE)
 }

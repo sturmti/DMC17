@@ -61,8 +61,18 @@ getClassData <- function(){
 #' @description Imports the train_dailyPriceDifference.csv data, factors the pid column and returns a corresponding data.table.
 #' @return A data.table containing the train_dailyPriceDifference.csv data.
 getDailyPriceDifferenceData <- function(){
-  data.dailyPriceDifference <- data.table(read.csv(file = getFilePath("train_dailyPriceDifference.csv"), header = T, sep = "|"))
+  data.dailyPriceDifference <- data.table(read.csv(file = getFilePath("train_dailyPriceDifference_V1.1.csv"), header = T, sep = "|"))
   data.dailyPriceDifference$lineID <- ordered(data.dailyPriceDifference$lineID)
   data.dailyPriceDifference <- data.dailyPriceDifference[order(lineID)]
   data.dailyPriceDifference
+}
+
+#' Get the daily competitorPrice difference data
+#' @description Imports the train_dailyCompetitorPriceDifference.csv data, factors the pid column and returns a corresponding data.table.
+#' @return A data.table containing the train_dailyCompetitorPriceDifference.csv data.
+getDailyCompetitorPriceDifferenceData <- function(){
+  data.dailyCompetitorPriceDifference <- data.table(read.csv(file = getFilePath("train_dailyCompetitorPriceDifference_V1.1.csv"), header = T, sep = "|"))
+  data.dailyCompetitorPriceDifference$lineID <- ordered(data.dailyCompetitorPriceDifference$lineID)
+  data.dailyCompetitorPriceDifference <- data.dailyCompetitorPriceDifference[order(lineID)]
+  data.dailyCompetitorPriceDifference
 }
