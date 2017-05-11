@@ -259,9 +259,49 @@ amountAlreadyBoughtOnSameDay <- {
 
 ############### End: amountBoughtOnSameDay ###############
 
+
+
+
 data.train.testSet <- data.train
 
 
-lapply()
+########## MIGHT WORK!!!! ########## 
+data.train.testSet$dailyPriceChangeCategory <- {
+  pids <- sort(unique(data.train.testSet$pid))
+  unlist(lapply(pids, function(current.pid){
+   # print(current.pid)
+    data.train.for.current.pid <- data.train.testSet[pid == current.pid]
+    current.pid.DailyPriceChange.quantiles <- quantile(data.train.for.current.pid[dailyPriceChange != 0]$dailyPriceChange, na.rm=TRUE)
+    data.train.for.current.pid.unique <- unique(data.train.for.current.pid[, c("day", "dailyPriceChange")])
+    data.train.for.current.pid.unique$dailyPriceChangeCategory <- vapply(1:nrow(data.train.for.current.pid.unique), function(i){
+      if(is.na(data.train.for.current.pid.unique[i]$dailyPriceChange)){
+        "NA"
+      }
+      else if(data.train.for.current.pid.unique[i]$dailyPriceChange == 0){
+        "none"
+      }
+      else if(nrow(data.train.for.current.pid.unique) == 1){
+        "middle"
+      }
+      else if(data.train.for.current.pid.unique[i]$dailyPriceChange <= current.pid.DailyPriceChange.quantiles[2]){
+        "low"
+      }
+      else if(data.train.for.current.pid.unique[i]$dailyPriceChange <= current.pid.DailyPriceChange.quantiles[3]){
+        "middle"
+      }
+      else{
+        "high"
+      }
+    }, FUN.VALUE = character(1))
+    data.train.for.current.pid <- merge(data.train.for.current.pid, data.train.for.current.pid.unique, all.x=TRUE, by=c("day", "dailyPriceChange"))
+    #print(data.train.for.current.pid$dailyPriceChangeCategory)
+    data.train.for.current.pid$dailyPriceChangeCategory
+  }))
+}
 
+
+nrow(unique(data.train.testSet[, c("pid", "day", "dailyPriceChange")]))
+
+
+unique(data.train.testSet[pid == pids[63]][, c("day", "dailyPriceChange")][1])
 
