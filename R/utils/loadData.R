@@ -76,3 +76,33 @@ getDailyCompetitorPriceDifferenceData <- function(){
   data.dailyCompetitorPriceDifference <- data.dailyCompetitorPriceDifference[order(lineID)]
   data.dailyCompetitorPriceDifference
 }
+
+
+
+getBasketData <- function(){
+  data.basket <- data.table(read.csv(file = getFilePath("baskets.csv"), header = T, sep = ";"))
+  data.basket
+}
+
+
+getAlexData <- function(){
+  data.alex <- data.table(read.csv(file = getFilePath("trainNewFeatures_10_5_2017_Alex.csv"), header = T, sep = ";"))
+  data.alex$lineID <- ordered(data.alex$lineID)
+  data.alex
+}
+
+
+
+###### Association Analysis ###### 
+getAssociationSetOrderedItems <- function(){
+  data.associationSetOrderedItems <- data.table(read.csv(file = getFilePath("Association_Analysis_Data\\orderedItemSets.csv"), header = T, sep = ";"))
+  data.associationSetOrderedItems
+}
+
+getAssociationSetNotOrderedItems <- function(){
+  data.associationSetNotOrderedItems <- data.table(read.csv(file = getFilePath("Association_Analysis_Data\\NotOrderedItemSets.csv"), header = T, sep = ";"))
+  data.associationSetNotOrderedItems
+}
+
+
+

@@ -12,6 +12,9 @@ library(plyr)
 data.items <- getItemData()
 data.train <- getTrainData()
 data.class <- getClassData()
+data.basket <- getBasketData()
+data.alex <- getAlexData()
+data.all.with.alex <- merge(data.alex, data.all, all.x=TRUE, by=c("lineID"))
 data.dailyPriceDifference <- getDailyPriceDifferenceData()
 
 data.train <- initializeDataTrain(TRUE)
@@ -21,8 +24,8 @@ data.all <- initializeJoinedData(TRUE)
 
 ####### CSV File Creation ####### 
 storeData(data = data.items, file.name = "items_v1.5.csv")
-storeData(data = data.train, file.name = "train_1.9.csv")
-storeData(data = data.all, file.name = "trainItems_v1.8.csv")
+storeData(data = data.train, file.name = "train_2.0.csv")
+storeData(data = data.all, file.name = "trainItems_v1.9.csv")
 
 
 #3480: record with content == "40X0.5"
@@ -266,11 +269,11 @@ data.train.testSet <- data.train
 
 
 ########## MIGHT WORK!!!! ########## 
-data.train.testSet$dailyPriceChangeCategory <- {
+dailyPriceChangeCategory <- {
   pids <- sort(unique(data.train.testSet$pid))
   unlist(lapply(pids, function(current.pid){
-   # print(current.pid)
-    data.train.for.current.pid <- data.train.testSet[pid == current.pid]
+    print(current.pid)
+    data.train.for.current.pid <- data.train.testSet[day < 64][pid == current.pid]
     current.pid.DailyPriceChange.quantiles <- quantile(data.train.for.current.pid[dailyPriceChange != 0]$dailyPriceChange, na.rm=TRUE)
     data.train.for.current.pid.unique <- unique(data.train.for.current.pid[, c("day", "dailyPriceChange")])
     data.train.for.current.pid.unique$dailyPriceChangeCategory <- vapply(1:nrow(data.train.for.current.pid.unique), function(i){
@@ -305,3 +308,62 @@ nrow(unique(data.train.testSet[, c("pid", "day", "dailyPriceChange")]))
 
 unique(data.train.testSet[pid == pids[63]][, c("day", "dailyPriceChange")][1])
 
+max(data.train$day)
+
+data.train[pid == 185]
+
+print(1:1)
+
+
+
+nrow(data.train[order==1][pid==11563])/nrow(data.train2491)
+
+
+nrow(data.train[pid == 2492][order==1])/nrow(data.train[order==1])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###### NEW BASKET FEATURES ###################
+# Indicator if the basket is an order or a non-order basket (depending on the majority of the contained ordered items)
+data.all.with.alex$basket_type <- setnames(data.all.with.alex[,as.numeric(names(which.max(table(order)))),by=basket_id], c("basket_id", "basket_type"))$basket_type
+
+
+# create basket_id_unique 
+data.baskets.unique <- unique(data.basket[, !c("basket_id")])
+data.baskets.unique$basket_id_unique <- seq.int(nrow(data.baskets.unique))
+data.basket <- merge(data.basket, data.baskets.unique, all.x=TRUE, by=names(data.baskets.unique[, !c("basket_id_unique", "number.of.occurences.per.basket")]))
+
+data.baskets.unique$number.of.occurences.per.basket <- number.of.occurences.per.basket
+
+number.of.occurences.per.basket <- vapply(1:nrow(data.baskets.unique), function(i){
+  if(i%%10000 == 0){
+    print(i)
+  }
+ nrow(data.basket[basket_id_unique == data.baskets.unique[i]$basket_id_unique]) 
+}, FUN.VALUE=numeric(1))
+
+
+names(data.all.with.alex)
+data.all.with.alex <- merge(data.all.with.alex, data.basket[, c("basket_id", "basket_id_unique", "number.of.occurences.per.basket")], all.x=TRUE, by=c("basket_id"))
+
+data.basket[][number.of.occurences.per.basket == max(data.basket$number.of.occurences.per.basket)]
+
+
+data.all.with.alex[basket_id_unique == 2][basket_type == 1]
