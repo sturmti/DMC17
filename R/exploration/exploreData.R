@@ -7,6 +7,7 @@ library(ggplot2)
 install.packages("gdata")
 library(gdata)
 library(plyr)
+library(stringr)
 
 ####### Initialization ####### 
 data.items <- getItemData()
@@ -14,6 +15,8 @@ data.train <- getTrainData()
 data.class <- getClassData()
 data.basket <- getBasketData()
 data.alex <- getAlexData()
+data.associationSetOrderedItems <- getAssociationSetOrderedItems()
+data.associationSetNotOrderedItems <- getAssociationSetNotOrderedItems()
 data.all.with.alex <- merge(data.alex, data.all, all.x=TRUE, by=c("lineID"))
 data.dailyPriceDifference <- getDailyPriceDifferenceData()
 
@@ -348,10 +351,22 @@ data.all.with.alex$basket_type <- setnames(data.all.with.alex[,as.numeric(names(
 # create basket_id_unique 
 data.baskets.unique <- unique(data.basket[, !c("basket_id")])
 data.baskets.unique$basket_id_unique <- seq.int(nrow(data.baskets.unique))
-data.basket <- merge(data.basket, data.baskets.unique, all.x=TRUE, by=names(data.baskets.unique[, !c("basket_id_unique", "number.of.occurences.per.basket")]))
 
-data.baskets.unique$number.of.occurences.per.basket <- number.of.occurences.per.basket
+# create feature which is just a string out of all contained items
+data.baskets.unique$basketItemsAsString <- paste(data.baskets.unique$product0, data.baskets.unique$product1, data.baskets.unique$product2, data.baskets.unique$product3, data.baskets.unique$product4,
+                                                 data.baskets.unique$product5, data.baskets.unique$product6, data.baskets.unique$product7, data.baskets.unique$product8, data.baskets.unique$product9,
+                                                 data.baskets.unique$product10, data.baskets.unique$product11, data.baskets.unique$product12, data.baskets.unique$product13, data.baskets.unique$product14,
+                                                 data.baskets.unique$product15, data.baskets.unique$product16, data.baskets.unique$product17, data.baskets.unique$product18, data.baskets.unique$product19,
+                                                 data.baskets.unique$product20, data.baskets.unique$product21, data.baskets.unique$product22, data.baskets.unique$product23, data.baskets.unique$product24,
+                                                 data.baskets.unique$product25, data.baskets.unique$product26, data.baskets.unique$product27, data.baskets.unique$product28, data.baskets.unique$product29,
+                                                 data.baskets.unique$product30, data.baskets.unique$product31, data.baskets.unique$product32, data.baskets.unique$product33, data.baskets.unique$product34,
+                                                 data.baskets.unique$product35, data.baskets.unique$product36, data.baskets.unique$product37, data.baskets.unique$product38, data.baskets.unique$product39)
 
+# Map the new features to data.basket
+data.basket <- merge(data.basket, data.baskets.unique, all.x=TRUE, by=names(data.baskets.unique[, !c("basket_id_unique", "number.of.occurences.per.basket", "basketItemsAsString")]))
+
+
+# Counts the number of occurences for each unique basket
 number.of.occurences.per.basket <- vapply(1:nrow(data.baskets.unique), function(i){
   if(i%%10000 == 0){
     print(i)
@@ -359,11 +374,76 @@ number.of.occurences.per.basket <- vapply(1:nrow(data.baskets.unique), function(
  nrow(data.basket[basket_id_unique == data.baskets.unique[i]$basket_id_unique]) 
 }, FUN.VALUE=numeric(1))
 
+data.baskets.unique$number.of.occurences.per.basket <- number.of.occurences.per.basket
 
-names(data.all.with.alex)
 data.all.with.alex <- merge(data.all.with.alex, data.basket[, c("basket_id", "basket_id_unique", "number.of.occurences.per.basket")], all.x=TRUE, by=c("basket_id"))
 
-data.basket[][number.of.occurences.per.basket == max(data.basket$number.of.occurences.per.basket)]
+
+# returns a list containing the number of occurences of each frequent ordered item set (with size>1) in the overall basket set
+# takes very long (approx. 3-4 hours) to process (due to the high number of string comparisons)
+numberOfBasketsContainingFrequentItemSet <- vapply(1: nrow(data.associationSetOrderedItems[Size>1]), function(i){
+  if(i%%10==0)
+    print(i)
+  current.items <- strsplit(str_replace_all(toString(data.associationSetOrderedItems[Size>1][order(Support, decreasing = TRUE)][i]$Items), pattern=" ", repl=""), c(","))[[1]]
+  if(length(current.items == 2))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString)
+  else if(length(current.items == 3))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString)
+  else if(length(current.items == 4))
+    result<-  grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString) & grepl(current.items[4], data.basket$basketItemsAsString)
+  else if(length(current.items == 5))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString) & grepl(current.items[4], data.basket$basketItemsAsString) & grepl(current.items[5], data.basket$basketItemsAsString)
+  length(result[result==TRUE])
+}, FUN.VALUE=numeric(1))
 
 
-data.all.with.alex[basket_id_unique == 2][basket_type == 1]
+
+
+######## Exploration ZONE ############
+
+
+View(data.associationSetOrderedItems[Size>1])
+
+
+# get the items split into a list of characters of one single item
+numberOfBasketsContainingFrequentItemSet <- vapply(1: nrow(data.associationSetOrderedItems[Size>1]), function(i){
+  if(i%%10==0)
+    print(i)
+  current.items <- strsplit(str_replace_all(toString(data.associationSetOrderedItems[Size>1][order(Support, decreasing = TRUE)][i]$Items), pattern=" ", repl=""), c(","))[[1]]
+  if(length(current.items == 2))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString)
+  else if(length(current.items == 3))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString)
+  else if(length(current.items == 4))
+    result<-  grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString) & grepl(current.items[4], data.basket$basketItemsAsString)
+  else if(length(current.items == 5))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString) & grepl(current.items[4], data.basket$basketItemsAsString) & grepl(current.items[5], data.basket$basketItemsAsString)
+  length(result[result==TRUE])
+}, FUN.VALUE=numeric(1))
+
+# create feature which is just a string out of all contained items
+data.baskets.unique$basketItemsAsString <- paste(data.baskets.unique$product0, data.baskets.unique$product1, data.baskets.unique$product2, data.baskets.unique$product3, data.baskets.unique$product4,
+                                                 data.baskets.unique$product5, data.baskets.unique$product6, data.baskets.unique$product7, data.baskets.unique$product8, data.baskets.unique$product9,
+                                                 data.baskets.unique$product10, data.baskets.unique$product11, data.baskets.unique$product12, data.baskets.unique$product13, data.baskets.unique$product14,
+                                                 data.baskets.unique$product15, data.baskets.unique$product16, data.baskets.unique$product17, data.baskets.unique$product18, data.baskets.unique$product19,
+                                                 data.baskets.unique$product20, data.baskets.unique$product21, data.baskets.unique$product22, data.baskets.unique$product23, data.baskets.unique$product24,
+                                                 data.baskets.unique$product25, data.baskets.unique$product26, data.baskets.unique$product27, data.baskets.unique$product28, data.baskets.unique$product29,
+                                                 data.baskets.unique$product30, data.baskets.unique$product31, data.baskets.unique$product32, data.baskets.unique$product33, data.baskets.unique$product34,
+                                                 data.baskets.unique$product35, data.baskets.unique$product36, data.baskets.unique$product37, data.baskets.unique$product38, data.baskets.unique$product39)
+
+
+frequentOrderedItemSets[[1]][2]
+
+basketsContainingMostFrequentItemSet <-  grepl(frequentOrderedItemSets[[1]][1], data.basket$basketItemsAsString) & grepl(frequentOrderedItemSets[[1]][2], data.basket$basketItemsAsString)
+
+length(basketsContainingMostFrequentItemSet[basketsContainingMostFrequentItemSet==TRUE])
+
+
+
+
+
+
+
+
+
+
