@@ -6,9 +6,9 @@ library(dplyr)
 #' Initialize data.train
 #' @description Initializes data.train by importing the data and adding the engineered features.
 #' @return A data.table containing the train.csv data with the additional engineered features.
-initializeDataTrain <- function(dropFirst19Days = FALSE){
+initializeDataTrain <- function(dropFirst19Days = FALSE, combine.With.class.data=FALSE){
   data.train <- getTrainData(dropFirst19Days)
-  data.train <- createEngineeredFeaturesForDataTrain(data.train)
+  data.train <- createEngineeredFeaturesForDataTrain(data.train, combine.With.class.data)
   data.train
 }
 
@@ -25,8 +25,8 @@ initializeDataItems <- function(){
 #' Initialize data.all
 #' @description Initializes data.items by importing the data and adding the engineered features.
 #' @return A data.table containing the items.csv data with the additional engineered features.
-initializeJoinedData <- function(dropFirst19Days = FALSE){
-  data.train <- initializeDataTrain(dropFirst19Days)
+initializeJoinedData <- function(dropFirst19Days = FALSE, combine.With.class.data=FALSE){
+  data.train <- initializeDataTrain(dropFirst19Days, combine.With.class.data)
   data.items <- initializeDataItems()
   data.all <- joinData(data.train, data.items)
   data.all <- createEngineeredFeaturesForDataTrainItems(data.all)

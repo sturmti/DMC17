@@ -49,10 +49,9 @@ getClassData <- function(){
   # Import Data
   data.class <- data.table(read.csv(file = getFilePath("class.csv"), header = T, sep = "|"))
   # factorize the polynominal columns: 
-  #    - factored: lineID, pi
-  #    - ordered: availability
-  data.class$lineID <- factor(data.class$lineID)
-  data.class$pid <- factor(data.class$pid)
+  #    - ordered: lineID, pid, availability
+  data.class$lineID <- ordered(data.class$lineID)
+  data.class$pid <- ordered(data.class$pid)
   data.class$availability <- ordered(data.class$availability, levels = c(1, 2, 3, 4))
   data.class
 }

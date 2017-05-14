@@ -1,9 +1,19 @@
 #' Create additional engineered features for the train.csv
 #' @description Computes and adds the engineered features to the data.train data set.
 #' @return A data.table containing the enhanced data.train data set.
-createEngineeredFeaturesForDataTrain <- function(data.train){
-  # removing test set information (only necessary to use for order or/and revenue based features!)
-  data.train.reduced <- data.train[day < 64]
+createEngineeredFeaturesForDataTrain <- function(data.train, combine.With.class.data = FALSE){
+  if(combine.With.class.data == TRUE){
+    # removing test set information (only necessary to use for order or/and revenue based features!)
+    data.train.reduced <- data.train[day < 93]
+    # add class data to the train set
+    data.class <- getClassData()
+    data.train <- union_all(data.train, data.class)
+  }
+  else{
+    # removing test set information (only necessary to use for order or/and revenue based features!)
+    data.train.reduced <- data.train[day < 64]
+  }
+  
 
   ## based on day
   # timestamp (format: mm/dd/YYYY) starts on 01.10.2016

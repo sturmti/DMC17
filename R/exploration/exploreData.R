@@ -20,16 +20,17 @@ data.associationSetNotOrderedItems <- getAssociationSetNotOrderedItems()
 data.all.with.alex <- merge(data.alex, data.all, all.x=TRUE, by=c("lineID"))
 data.dailyPriceDifference <- getDailyPriceDifferenceData()
 
-data.train <- initializeDataTrain(TRUE)
+data.train <- initializeDataTrain(dropFirst19Days=TRUE, combine.With.class.data=TRUE)
 data.items <- initializeDataItems()
+data.all <- initializeJoinedData(dropFirst19Days=TRUE, combine.With.class.data=TRUE)
 
-data.all <- initializeJoinedData(TRUE)
+
 
 ####### CSV File Creation ####### 
 storeData(data = data.items, file.name = "items_v1.5.csv")
-storeData(data = data.train, file.name = "train_2.0.csv")
-storeData(data = data.all, file.name = "trainItems_v1.9.csv")
-
+storeData(data = data.train, file.name = "trainClass1.0(without any basket features).csv")
+storeData(data = data.all, file.name = "trainClassItems_v1.0(without any basket features).csv")
+storeData(data = data.associationSetOrderedItems.setSize.bigger.1, file.name = "OrderedItemSets_With_Size_Bigger_1_AND_Ratios(ordered_by_Support).csv")
 
 #3480: record with content == "40X0.5"
 data.items[content == "40X0.5"]
@@ -398,6 +399,21 @@ numberOfBasketsContainingFrequentItemSet <- vapply(1: nrow(data.associationSetOr
 
 
 
+numberOfBasketsContainingNotOrderedFrequentItemSet <- vapply(1: nrow(data.associationSetNotOrderedItems[Size>1]), function(i){
+  if(i%%10==0)
+    print(i)
+  current.items <- strsplit(str_replace_all(toString(data.associationSetNotOrderedItems[Size>1][order(Support, decreasing = TRUE)][i]$Items), pattern=" ", repl=""), c(","))[[1]]
+  if(length(current.items == 2))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString)
+  else if(length(current.items == 3))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString)
+  else if(length(current.items == 4))
+    result<-  grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString) & grepl(current.items[4], data.basket$basketItemsAsString)
+  else if(length(current.items == 5))
+    result <- grepl(current.items[1], data.basket$basketItemsAsString) & grepl(current.items[2], data.basket$basketItemsAsString) & grepl(current.items[3], data.basket$basketItemsAsString) & grepl(current.items[4], data.basket$basketItemsAsString) & grepl(current.items[5], data.basket$basketItemsAsString)
+  length(result[result==TRUE])
+}, FUN.VALUE=numeric(1))
+
 
 ######## Exploration ZONE ############
 
@@ -440,6 +456,18 @@ length(basketsContainingMostFrequentItemSet[basketsContainingMostFrequentItemSet
 
 
 
+#### Ratio for frequent ordered item sets
+data.associationSetOrderedItems.setSize.bigger.1 <- data.associationSetOrderedItems[Size>1][order(Support, decreasing = TRUE)]
+data.associationSetOrderedItems.setSize.bigger.1$numberOfBasketsContainingOrderedFrequentItemSet <- numberOfBasketsContainingFrequentItemSet
+data.associationSetOrderedItems.setSize.bigger.1$ratioFrequencyToNumberOfBasketsContainingOrderedFrequentItemSet <- data.associationSetOrderedItems.setSize.bigger.1$Frequency / data.associationSetOrderedItems.setSize.bigger.1$numberOfBasketsContainingOrderedFrequentItemSet
+
+#### Ratio for frequent not-ordered item sets
+data.associationSetNotOrderedItems.setSize.bigger.1 <- data.associationSetNotOrderedItems[Size>1][order(Support, decreasing = TRUE)]
+data.associationSetNotOrderedItems.setSize.bigger.1$numberOfBasketsContainingNotOrderedFrequentItemSet <- numberOfBasketsContainingNotOrderedFrequentItemSet
+data.associationSetNotOrderedItems.setSize.bigger.1$ratioFrequencyToNumberOfBasketsContainingNotOrderedFrequentItemSet <- data.associationSetNotOrderedItems.setSize.bigger.1$Frequency / data.associationSetNotOrderedItems.setSize.bigger.1$numberOfBasketsContainingNotOrderedFrequentItemSet
+
+
+View(data.associationSetOrderedItems.setSize.bigger.1[order(Support, decreasing = TRUE)])
 
 
 
@@ -447,3 +475,19 @@ length(basketsContainingMostFrequentItemSet[basketsContainingMostFrequentItemSet
 
 
 
+
+
+
+
+
+
+
+
+
+##################################
+data.trainClass <- union_all(data.train, data.class)
+
+
+nrow(data.train) + nrow(data.class)
+
+max(data.train$day)
