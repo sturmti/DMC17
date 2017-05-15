@@ -8,6 +8,7 @@ createEngineeredFeaturesForDataTrain <- function(data.train, combine.With.class.
     # add class data to the train set
     data.class <- getClassData()
     data.train <- union_all(data.train, data.class)
+    data.train <- data.train[order(lineID)]
   }
   else{
     # removing test set information (only necessary to use for order or/and revenue based features!)
@@ -104,7 +105,9 @@ createEngineeredFeaturesForDataTrain <- function(data.train, combine.With.class.
   # price variance ratio of meanPrice and price to meanPrice per pid
   data.train$meanPricePriceVarianceToMeanPrice <- data.train$priceMeanPriceVariance/data.train$meanPricePerProduct
 
-  
+  ###############################################
+ # data.train <- data.train[day>92]
+  ###############################################
   
   ## features based on dailyPriceDifference
   data.train <- merge(data.train, getDailyPriceDifferenceData(), all.x=TRUE, by=c("lineID"))

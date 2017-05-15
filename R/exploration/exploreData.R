@@ -491,3 +491,14 @@ data.trainClass <- union_all(data.train, data.class)
 nrow(data.train) + nrow(data.class)
 
 max(data.train$day)
+
+any(isFalse(data.train == data.train[order(lineID)]))
+
+isFalse <- function(data){
+  if(data==FALSE)
+    TRUE
+  else
+    FALSE
+}
+
+isFalse(FALSE)
