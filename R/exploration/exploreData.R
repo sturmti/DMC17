@@ -13,6 +13,7 @@ library(stringr)
 data.items <- getItemData()
 data.train <- getTrainData()
 data.class <- getClassData()
+data.train <- getDataTrainClass()
 data.basket <- getBasketData()
 data.alex <- getAlexData()
 data.associationSetOrderedItems <- getAssociationSetOrderedItems()
@@ -25,12 +26,63 @@ data.items <- initializeDataItems()
 data.all <- initializeJoinedData(dropFirst19Days=TRUE, combine.With.class.data=TRUE)
 
 
+data.test <- getDailyCompetitorPriceDifferenceData()
+class(data.test$dailyCompetitorPriceDifference)
 
-####### CSV File Creation ####### 
-storeData(data = data.items, file.name = "items_v1.5.csv")
-storeData(data = data.train, file.name = "trainClass1.0(without any basket features).csv")
-storeData(data = data.all, file.name = "trainClassItems_v1.0(without any basket features).csv")
-storeData(data = data.associationSetOrderedItems.setSize.bigger.1, file.name = "OrderedItemSets_With_Size_Bigger_1_AND_Ratios(ordered_by_Support).csv")
+
+data.alexTrain <- getAlexTrainData()
+data.train.with.alex <- merge(data.train[day<93], data.alexTrain, all.x=TRUE, by=c("lineID"))
+
+data.all.with.alex <- merge(data.all[day<93], data.alexTrain, all.x=TRUE, by=c("lineID"))
+
+data.alexClass <- getAlexClassData()
+
+data.all.class.with.alex <- data.all.class.with.alex[, !c("advertised_basket_predecessor")]
+
+
+rm(data.all.only.class)
+
+
+
+##################FINAL DATA################################
+data.classItems.final <- data.all[day>92]
+data.classItems.final$lineID <- data.classItems.final$lineID - 2756003
+data.all.class.with.alex$lineID <- data.all.class.with.alex$lineID - 2756003
+
+
+data.all.class.with.alex[, !c("advertised_basket_predecessor")]
+
+data.train.final <- data.train[day<93]
+
+data.trainItems.final <- data.all[day < 93]
+
+data.class.final <- data.train[day>92]
+data.class.final$lineID <- data.class.final$lineID - 2756003
+
+
+data.alexClass
+data.classItems.final
+
+data.ClassItems.final2 <- merge(data.classItems.final, data.alexClass, all.x =TRUE, by=c("lineID"))
+data.ClassItems.final2
+
+
+
+####### CSV File Creation #######
+storeData(data = data.ClassItems.final2[, !c("click", "basket", "order", "actionType")], file.name = "classItems_FINAL_2.csv")
+
+
+storeData(data = data.train.final, file.name = "train_FINAL.csv")
+storeData(data = data.trainItems.final, file.name = "trainItems_FINAL.csv")
+storeData(data = data.class.final, file.name = "class_FINAL.csv")
+
+nrow(data.train.final)
+
+#################################################################
+data.class.final[month == min(data.class.final$month)]
+
+
+names(data.train)
 
 #3480: record with content == "40X0.5"
 data.items[content == "40X0.5"]
@@ -214,7 +266,7 @@ dailyCompetitorPriceDiff <- {
 }
 competitorPricePerPidAndDay$dailyCompetitorPriceDifference <- unlist(dailyCompetitorPriceDiff)
 data.train.with.daily.competitorPrice.difference <- merge(data.train, competitorPricePerPidAndDay[, c("pid", "day", "dailyCompetitorPriceDifference")], all.x=TRUE, by=c("pid", "day"))
-data.train.with.daily.price.difference[, c("pid", "day", "price", "dailyPriceDifference")]
+data.train.with.daily.competitorPrice.difference[, c("pid", "day", "price", "dailyPriceDifference")]
 
 ############### End: Daily competitorPrice Difference ############### 
 data.train.with.daily.competitorPrice.difference[pid == 2537][, c("day","pid","competitorPrice", "dailyCompetitorPriceDifference")]
@@ -502,3 +554,6 @@ isFalse <- function(data){
 }
 
 isFalse(FALSE)
+
+
+max(data.train$lineID)

@@ -36,7 +36,7 @@ getTrainData <- function(dropFirst19Days = FALSE){
   }
   # factorize the polynominal columns: 
   #    - ordered: lineID, pid, availability
-  data.train$lineID <- ordered(data.train$lineID)
+  #data.train$lineID <- ordered(data.train$lineID)
   data.train$pid <- ordered(data.train$pid)
   data.train$availability <- ordered(data.train$availability, levels = c(1, 2, 3, 4))
   data.train
@@ -50,7 +50,8 @@ getClassData <- function(){
   data.class <- data.table(read.csv(file = getFilePath("class.csv"), header = T, sep = "|"))
   # factorize the polynominal columns: 
   #    - ordered: lineID, pid, availability
-  data.class$lineID <- ordered(data.class$lineID)
+  data.class$lineID <- data.class$lineID + 2756003
+  #data.class$lineID <- ordered(data.class$lineID)
   data.class$pid <- ordered(data.class$pid)
   data.class$availability <- ordered(data.class$availability, levels = c(1, 2, 3, 4))
   data.class
@@ -60,8 +61,8 @@ getClassData <- function(){
 #' @description Imports the train_dailyPriceDifference.csv data, factors the pid column and returns a corresponding data.table.
 #' @return A data.table containing the train_dailyPriceDifference.csv data.
 getDailyPriceDifferenceData <- function(){
-  data.dailyPriceDifference <- data.table(read.csv(file = getFilePath("trainClass_dailyPriceDifference_V1.0.csv"), header = T, sep = "|"))
-  data.dailyPriceDifference$lineID <- ordered(data.dailyPriceDifference$lineID)
+  data.dailyPriceDifference <- data.table(read.csv(file = getFilePath("trainClass_dailyPriceDifference_V1.1.csv"), header = T, sep = "|"))
+  #data.dailyPriceDifference$lineID <- ordered(data.dailyPriceDifference$lineID)
   data.dailyPriceDifference <- data.dailyPriceDifference[order(lineID)][, c("lineID", "dailyPriceDifference")]
   data.dailyPriceDifference
 }
@@ -70,8 +71,8 @@ getDailyPriceDifferenceData <- function(){
 #' @description Imports the train_dailyCompetitorPriceDifference.csv data, factors the pid column and returns a corresponding data.table.
 #' @return A data.table containing the train_dailyCompetitorPriceDifference.csv data.
 getDailyCompetitorPriceDifferenceData <- function(){
-  data.dailyCompetitorPriceDifference <- data.table(read.csv(file = getFilePath("trainClass_dailyCompetitorPriceDifference_V1.0.csv"), header = T, sep = "|"))
-  data.dailyCompetitorPriceDifference$lineID <- ordered(data.dailyCompetitorPriceDifference$lineID)
+  data.dailyCompetitorPriceDifference <- data.table(read.csv(file = getFilePath("trainClass_dailyCompetitorPriceDifference_V1.1.csv"), header = T, sep = "|"))
+  #data.dailyCompetitorPriceDifference$lineID <- ordered(data.dailyCompetitorPriceDifference$lineID)
   data.dailyCompetitorPriceDifference <- data.dailyCompetitorPriceDifference[order(lineID)][, c("lineID", "dailyCompetitorPriceDifference")]
   data.dailyCompetitorPriceDifference
 }
@@ -84,9 +85,17 @@ getBasketData <- function(){
 }
 
 
-getAlexData <- function(){
+getAlexTrainData <- function(){
   data.alex <- data.table(read.csv(file = getFilePath("trainNewFeatures_10_5_2017_Alex.csv"), header = T, sep = ";"))
-  data.alex$lineID <- ordered(data.alex$lineID)
+  #data.alex$lineID <- ordered(data.alex$lineID)
+  data.alex <- data.alex[, !c("predict.Order.")]
+  data.alex
+}
+
+getAlexClassData <- function(){
+  data.alex <- data.table(read.csv(file = getFilePath("classBasketFeaturesAlex2.0.csv"), header = T, sep = ";"))
+  #data.alex$lineID <- ordered(data.alex$lineID)
+ # data.alex$lineID <- data.alex$lineID + 2756003
   data.alex
 }
 
@@ -109,6 +118,4 @@ getAssociationSetNotOrderedItems <- function(){
   data.associationSetNotOrderedItems <- data.table(read.csv(file = getFilePath("Association_Analysis_Data\\NotOrderedItemSets.csv"), header = T, sep = ";"))
   data.associationSetNotOrderedItems
 }
-
-
 
